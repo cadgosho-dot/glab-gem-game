@@ -1,0 +1,17 @@
+GitHub Pages 用アップロード版です。
+
+このフォルダの中身をGitHubにアップロードしてください。
+ZIPファイルそのものはアップロードしないでください。
+
+アップロードするもの:
+- index.html
+- app.js
+- style.css
+- service-worker.js
+- manifest.webmanifest
+- .nojekyll
+- icons フォルダ
+- assets フォルダ
+
+GitHub Pages設定:
+Settings → Pages → Deploy from a branch → main / root → Save

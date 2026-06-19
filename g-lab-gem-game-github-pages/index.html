@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#070a12" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="g-Lab." />
+  <title>g-Lab. Gem Merge Game</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app" aria-label="g-Lab. 宝石マージゲーム">
+    <header class="topbar">
+      <section class="brand logo-brand" aria-label="g-Lab. ロゴ">
+        <img class="main-logo" src="assets/g-lab-logo.jpg" alt="GALA Jewelry Entertainment 2F g-Lab. Jewelry Workshop Cafe" />
+      </section>
+      <section class="score-stack" aria-label="スコア">
+        <div class="score-card">
+          <span>Score</span>
+          <strong id="score">0</strong>
+        </div>
+        <div class="best-card">
+          <span>Best</span>
+          <b id="bestScore">0</b>
+        </div>
+      </section>
+    </header>
+
+    <section class="hud">
+      <div class="pill current-pill gem-pill">
+        <span>今の宝石</span>
+        <div class="gem-hud-preview">
+          <canvas id="currentGemIcon" width="72" height="72" aria-hidden="true"></canvas>
+          <b id="currentGem">ガーネット</b>
+        </div>
+      </div>
+      <div class="pill next-pill gem-pill">
+        <span>次</span>
+        <div class="gem-hud-preview">
+          <canvas id="nextGemIcon" width="72" height="72" aria-hidden="true"></canvas>
+          <b id="nextGem">アメシスト</b>
+        </div>
+      </div>
+    </section>
+
+    <section class="game-wrap" id="gameWrap">
+      <canvas id="gameCanvas" aria-label="g-Lab. gem merge game"></canvas>
+      <div class="drop-guide" id="dropGuide"></div>
+      <div class="tap-hint" id="tapHint">左右に動かして、タップで落とす</div>
+      <div class="game-over" id="gameOver">
+        <div class="game-over-card">
+          <h2>GAME OVER</h2>
+          <p>宝石が上まで積み上がりました</p>
+          <p class="small" id="finalScore">Score 0</p>
+          <button id="restartBtn">もう一度</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls single-control" aria-label="操作">
+      <button id="restartBtn2" class="primary">リセット</button>
+    </section>
+
+    <section class="legend" id="legend" aria-label="宝石の進化順"></section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
