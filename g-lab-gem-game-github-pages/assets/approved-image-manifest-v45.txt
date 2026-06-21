@@ -1,0 +1,13 @@
+00-garnet.png <- 美しい紅色の宝石.png
+01-amethyst.png <- 美しいアメジストの宝石.png
+02-aquamarine.png <- a_clean_isolated_close_up_of_a_single_faceted_gem.png
+03-diamond.png <- a_clean_highly_detailed_close_up_of_a_cut_diamond.png
+04-emerald.png <- a_close_up_high_resolution_isolated_gemstone_imag.png
+05-pearl.png <- a_close_up_centered_isolated_pearl_on_a_transpar.png
+06-ruby.png <- a_close_up_centered_isolated_glossy_heart_shaped.png
+07-peridot.png <- a_close_up_centered_illustration_photorealistic_r.png
+08-sapphire.png <- a_close_up_high_resolution_isolated_gemstone_illu.png
+09-opal.png <- a_close_up_highly_detailed_macro_style_image_of_a.png
+10-topaz.png <- 美しいアンバーのエメラルドカットジェム.png
+11-turquoise.png <- ターコイズカボションの輝き.png
+12-final-ring.png <- a_highly_detailed_close_up_studio_style_product_p.png

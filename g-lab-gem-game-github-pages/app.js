@@ -29,13 +29,13 @@
   const gems = [
     { name:'ガーネット', short:'Ga', color:'#8e183a', dark:'#2b0615', shine:'#ffd4df', accent:'#e34369', value:1, radius:14, density:1.30, cut:'roseRound', sides:12, transparency:.64 },
     { name:'アメシスト', short:'Am', color:'#7b37c9', dark:'#250647', shine:'#efe0ff', accent:'#b57cff', value:3, radius:20, density:1.20, cut:'oval', sides:14, transparency:.68 },
-    { name:'アクアマリン', short:'Aq', color:'#6fd8ed', dark:'#0e6382', shine:'#f2feff', accent:'#9cf5ff', value:6, radius:28, density:1.10, cut:'cushion', sides:12, transparency:.74 },
+    { name:'アクアマリン', short:'Aq', color:'#6fd8ed', dark:'#0e6382', shine:'#f2feff', accent:'#9cf5ff', value:6, radius:28, density:1.10, cut:'oval', sides:12, transparency:.74 },
     { name:'ダイヤモンド', short:'Di', color:'#dff7ff', dark:'#9cd8ed', shine:'#ffffff', accent:'#bff6ff', value:10, radius:37, density:1.00, cut:'diamond', sides:8, transparency:.82 },
     { name:'エメラルド', short:'Em', color:'#05895f', dark:'#03341f', shine:'#baf7d4', accent:'#24c987', value:15, radius:47, density:.90, cut:'emerald', sides:8, transparency:.70 },
     { name:'真珠', short:'Pe', color:'#fff0f0', dark:'#bba2a4', shine:'#ffffff', accent:'#ffe8f5', value:21, radius:58, density:.80, cut:'pearl', sides:18, transparency:.50 },
     { name:'ルビー', short:'Ru', color:'#c71941', dark:'#460715', shine:'#ffd3dd', accent:'#ff5b82', value:28, radius:70, density:.70, cut:'roseRound', sides:14, transparency:.67 },
     { name:'ペリドット', short:'Pr', color:'#9bcc22', dark:'#3d5b0c', shine:'#f7ffd1', accent:'#d4ff62', value:36, radius:83, density:.61, cut:'oval', sides:14, transparency:.70 },
-    { name:'サファイア', short:'Sa', color:'#1246b8', dark:'#061441', shine:'#d8e6ff', accent:'#3e84ff', value:45, radius:97, density:.53, cut:'cushion', sides:12, transparency:.69 },
+    { name:'サファイア', short:'Sa', color:'#1246b8', dark:'#061441', shine:'#d8e6ff', accent:'#3e84ff', value:45, radius:97, density:.53, cut:'oval', sides:12, transparency:.69 },
     { name:'オパール', short:'Pt', color:'#ed5bb0', dark:'#60123b', shine:'#ffe1f2', accent:'#ff91ca', value:55, radius:112, density:.46, cut:'tourmaline', sides:10, transparency:.68 },
     { name:'トパーズ', short:'To', color:'#f2c24b', dark:'#8c5710', shine:'#fff5bd', accent:'#ffd86a', value:66, radius:128, density:.40, cut:'emerald', sides:8, transparency:.66 },
     { name:'トルコ石', short:'Tu', color:'#35c5c5', dark:'#11606b', shine:'#bffffa', accent:'#74fff0', value:78, radius:145, density:.35, cut:'turquoise', sides:18, transparency:.45 },
@@ -96,7 +96,8 @@
     ballBounce: 0.075,
     friction: 0.988,
     floorFriction: 0.90,
-    iterations: 5
+    iterations: 5,
+    overlapFactor: 0.90
   };
 
   gemImages.forEach(image => {
@@ -123,7 +124,7 @@
     canvas.width = Math.floor(state.w * state.dpr);
     canvas.height = Math.floor(state.h * state.dpr);
     ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
-    state.dangerLine = Math.max(92, Math.round(state.h * 0.18));
+    state.dangerLine = Math.max(70, Math.round(state.h * 0.18) - 20);
     state.spawnY = Math.max(48, Math.round(state.dangerLine * 0.48));
     state.dropX = state.dropX || state.w / 2;
     updateGuide();
@@ -212,7 +213,7 @@
     const softFilter = audio.createBiquadFilter();
 
     master.gain.setValueAtTime(0.0001, audio.currentTime);
-    master.gain.exponentialRampToValueAtTime(0.10, audio.currentTime + 1.1);
+    master.gain.exponentialRampToValueAtTime(0.12, audio.currentTime + 1.1);
 
     reverbDelay.delayTime.value = 0.34;
     reverbFeedback.gain.value = 0.22;
@@ -654,7 +655,7 @@
           if (!a || !b || a.merging || b.merging) continue;
           let dx = b.x - a.x;
           let dy = b.y - a.y;
-          const minDist = a.r + b.r;
+          const minDist = (a.r + b.r) * (physics.overlapFactor || 1);
           let distSq = dx * dx + dy * dy;
           if (distSq > 0 && distSq < minDist * minDist) {
             let dist = Math.sqrt(distSq);
@@ -706,7 +707,7 @@
       const slow = Math.abs(b.vx) + Math.abs(b.vy) < 125;
       if (oldEnough && slow && b.y - b.r < state.dangerLine) {
         if (!b.settledAboveSince) b.settledAboveSince = now;
-        if (now - b.settledAboveSince > 1700) risky = true;
+        if (now - b.settledAboveSince > 2500) risky = true;
       } else {
         b.settledAboveSince = null;
       }
