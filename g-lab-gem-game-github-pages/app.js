@@ -97,7 +97,8 @@
     friction: 0.988,
     floorFriction: 0.90,
     iterations: 5,
-    overlapFactor: 0.90
+    // Easy mode: stones may overlap slightly more, creating extra packing room.
+    overlapFactor: 0.84
   };
 
   gemImages.forEach(image => {
@@ -108,7 +109,8 @@
   });
 
   function randomStartLevel() {
-    const bag = [0,0,0,0,1,1,1,2,2,3];
+    // Easy mode: early drops are weighted toward smaller stones.
+    const bag = [0,0,0,0,0,1,1,1,2,2];
     return bag[Math.floor(Math.random() * bag.length)];
   }
 
@@ -124,7 +126,7 @@
     canvas.width = Math.floor(state.w * state.dpr);
     canvas.height = Math.floor(state.h * state.dpr);
     ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
-    state.dangerLine = Math.max(70, Math.round(state.h * 0.18) - 20);
+    state.dangerLine = Math.max(54, Math.round(state.h * 0.17) - 32);
     state.spawnY = Math.max(48, Math.round(state.dangerLine * 0.48));
     state.dropX = state.dropX || state.w / 2;
     updateGuide();
@@ -136,7 +138,10 @@
     const maxBaseRadius = gems[gems.length - 1].radius;
     const maxAllowed = Math.max(104, (state.w - 34) / 2);
     const scale = Math.min(1, maxAllowed / maxBaseRadius);
-    return Math.round(gems[level].radius * scale);
+    const easyScale = 0.96;
+    // エメラルド（5番）以降は、v56のサイズからさらに5%小さくする。
+    const lateGemScale = level >= 4 ? 0.95 : 1;
+    return Math.round(gems[level].radius * scale * easyScale * lateGemScale);
   }
 
   function clampDropX(x) {
@@ -213,7 +218,7 @@
     const softFilter = audio.createBiquadFilter();
 
     master.gain.setValueAtTime(0.0001, audio.currentTime);
-    master.gain.exponentialRampToValueAtTime(0.12, audio.currentTime + 1.1);
+    master.gain.exponentialRampToValueAtTime(0.20, audio.currentTime + 1.1);
 
     reverbDelay.delayTime.value = 0.34;
     reverbFeedback.gain.value = 0.22;
@@ -707,7 +712,7 @@
       const slow = Math.abs(b.vx) + Math.abs(b.vy) < 125;
       if (oldEnough && slow && b.y - b.r < state.dangerLine) {
         if (!b.settledAboveSince) b.settledAboveSince = now;
-        if (now - b.settledAboveSince > 2500) risky = true;
+        if (now - b.settledAboveSince > 3500) risky = true;
       } else {
         b.settledAboveSince = null;
       }

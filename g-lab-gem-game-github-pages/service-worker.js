@@ -1,5 +1,5 @@
-// g-Lab Gem Game v54 home icon updated
-const CACHE_NAME = 'g-lab-gem-game-v55-retrim-all-gems';
+// g-Lab Gem Game v57 late gems 5% smaller
+const CACHE_NAME = 'g-lab-gem-game-v58-louder-bgm';
 const ASSETS = ['./', './index.html', './style.css',
   './assets/outer-bg-art-nouveau.png',
   './assets/g-lab-logo.jpg',
