@@ -139,9 +139,11 @@
     const maxAllowed = Math.max(104, (state.w - 34) / 2);
     const scale = Math.min(1, maxAllowed / maxBaseRadius);
     const easyScale = 0.96;
-    // エメラルド（5番）以降は、v56のサイズからさらに5%小さくする。
+    // ダイヤモンド（4番）以降は、現在よりさらに5%小さくして詰めやすくする。
+    const diamondAndLaterScale = level >= 3 ? 0.95 : 1;
+    // エメラルド（5番）以降は、v56からの5%縮小も維持する。
     const lateGemScale = level >= 4 ? 0.95 : 1;
-    return Math.round(gems[level].radius * scale * easyScale * lateGemScale);
+    return Math.round(gems[level].radius * scale * easyScale * diamondAndLaterScale * lateGemScale);
   }
 
   function clampDropX(x) {
@@ -218,7 +220,7 @@
     const softFilter = audio.createBiquadFilter();
 
     master.gain.setValueAtTime(0.0001, audio.currentTime);
-    master.gain.exponentialRampToValueAtTime(0.20, audio.currentTime + 1.1);
+    master.gain.exponentialRampToValueAtTime(0.30, audio.currentTime + 1.1);
 
     reverbDelay.delayTime.value = 0.34;
     reverbFeedback.gain.value = 0.22;

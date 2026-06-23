@@ -1,5 +1,5 @@
-// g-Lab Gem Game v57 late gems 5% smaller
-const CACHE_NAME = 'g-lab-gem-game-v58-louder-bgm';
+// g-Lab Gem Game v60 BGM louder, sound effects unchanged
+const CACHE_NAME = 'g-lab-gem-game-v60-bgm-louder-only';
 const ASSETS = ['./', './index.html', './style.css',
   './assets/outer-bg-art-nouveau.png',
   './assets/g-lab-logo.jpg',
