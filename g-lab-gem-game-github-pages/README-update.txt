@@ -1,0 +1,1 @@
+Replace app.js and service-worker.js inside g-lab-gem-game-github-pages, then Commit and Push origin.

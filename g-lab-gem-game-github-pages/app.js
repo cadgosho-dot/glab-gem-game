@@ -13,6 +13,7 @@
   const soundBtn = document.getElementById('soundBtn'); // removed in v10
   const restartBtn = document.getElementById('restartBtn');
   const restartBtn2 = document.getElementById('restartBtn2');
+  const difficultyButtons = [...document.querySelectorAll('.difficulty-btn')];
   const gameOverPanel = document.getElementById('gameOver');
   const finalScoreEl = document.getElementById('finalScore');
   const legend = document.getElementById('legend');
@@ -29,7 +30,7 @@
   const gems = [
     { name:'ガーネット', short:'Ga', color:'#8e183a', dark:'#2b0615', shine:'#ffd4df', accent:'#e34369', value:1, radius:14, density:1.30, cut:'roseRound', sides:12, transparency:.64 },
     { name:'アメシスト', short:'Am', color:'#7b37c9', dark:'#250647', shine:'#efe0ff', accent:'#b57cff', value:3, radius:20, density:1.20, cut:'oval', sides:14, transparency:.68 },
-    { name:'アクアマリン', short:'Aq', color:'#6fd8ed', dark:'#0e6382', shine:'#f2feff', accent:'#9cf5ff', value:6, radius:28, density:1.10, cut:'oval', sides:12, transparency:.74 },
+    { name:'アクアマリン', short:'Aq', color:'#6fd8ed', dark:'#0e6382', shine:'#f2feff', accent:'#9cf5ff', value:6, radius:28, density:1.10, cut:'cushion', sides:12, transparency:.74 },
     { name:'ダイヤモンド', short:'Di', color:'#dff7ff', dark:'#9cd8ed', shine:'#ffffff', accent:'#bff6ff', value:10, radius:37, density:1.00, cut:'diamond', sides:8, transparency:.82 },
     { name:'エメラルド', short:'Em', color:'#05895f', dark:'#03341f', shine:'#baf7d4', accent:'#24c987', value:15, radius:47, density:.90, cut:'emerald', sides:8, transparency:.70 },
     { name:'真珠', short:'Pe', color:'#fff0f0', dark:'#bba2a4', shine:'#ffffff', accent:'#ffe8f5', value:21, radius:58, density:.80, cut:'pearl', sides:18, transparency:.50 },
@@ -87,7 +88,8 @@
     audio: null,
     bgm: null,
     pointerDown: false,
-    moves: 0
+    moves: 0,
+    difficulty: 'normal'
   };
 
   const physics = {
@@ -108,10 +110,53 @@
     };
   });
 
+  const difficultyOptions = {
+    easy: {
+      // Easy: Garnet, Amethyst and Aquamarine do not appear.
+      // Drops begin at Diamond and remain weighted toward the smaller eligible gems.
+      bag: [3,3,3,3,4,4,5],
+      sizeScale: 1,
+      overlapFactor: 0.84,
+      gameOverGraceMs: 3500
+    },
+    normal: {
+      // Default: preserve the current normal balance.
+      bag: [0,0,0,0,0,1,1,1,2,2],
+      sizeScale: 1,
+      overlapFactor: 0.84,
+      gameOverGraceMs: 3500
+    },
+    hard: {
+      // Hard: all stones are 12% larger, almost cannot overlap,
+      // and the danger-line recovery window is intentionally short.
+      bag: [0,0,0,0,0,1,1,1,2,2],
+      sizeScale: 1.12,
+      overlapFactor: 0.99,
+      gameOverGraceMs: 2000
+    }
+  };
+
+  function currentDifficultyOption() {
+    return difficultyOptions[state.difficulty] || difficultyOptions.normal;
+  }
+
   function randomStartLevel() {
-    // Easy mode: early drops are weighted toward smaller stones.
-    const bag = [0,0,0,0,0,1,1,1,2,2];
+    const bag = currentDifficultyOption().bag;
     return bag[Math.floor(Math.random() * bag.length)];
+  }
+
+  function updateDifficultyButtons() {
+    difficultyButtons.forEach(button => {
+      const active = button.dataset.difficulty === state.difficulty;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  function setDifficulty(difficulty) {
+    if (!difficultyOptions[difficulty]) return;
+    state.difficulty = difficulty;
+    reset();
   }
 
   function initLegend() {
@@ -139,11 +184,12 @@
     const maxAllowed = Math.max(104, (state.w - 34) / 2);
     const scale = Math.min(1, maxAllowed / maxBaseRadius);
     const easyScale = 0.96;
-    // ダイヤモンド（4番）以降は、現在よりさらに5%小さくして詰めやすくする。
+    // Diamond (4th) and later remain smaller for the current balanced mode.
     const diamondAndLaterScale = level >= 3 ? 0.95 : 1;
-    // エメラルド（5番）以降は、v56からの5%縮小も維持する。
+    // Emerald (5th) and later keep the additional 5% reduction.
     const lateGemScale = level >= 4 ? 0.95 : 1;
-    return Math.round(gems[level].radius * scale * easyScale * diamondAndLaterScale * lateGemScale);
+    const difficultyScale = currentDifficultyOption().sizeScale || 1;
+    return Math.round(gems[level].radius * scale * easyScale * diamondAndLaterScale * lateGemScale * difficultyScale);
   }
 
   function clampDropX(x) {
@@ -220,7 +266,7 @@
     const softFilter = audio.createBiquadFilter();
 
     master.gain.setValueAtTime(0.0001, audio.currentTime);
-    master.gain.exponentialRampToValueAtTime(0.30, audio.currentTime + 1.1);
+    master.gain.exponentialRampToValueAtTime(0.36, audio.currentTime + 1.1);
 
     reverbDelay.delayTime.value = 0.34;
     reverbFeedback.gain.value = 0.22;
@@ -551,6 +597,7 @@
     gameOverPanel.classList.remove('show');
     tapHint.classList.remove('hide');
     updateHud();
+    updateDifficultyButtons();
     updateGuide();
   }
 
@@ -662,7 +709,11 @@
           if (!a || !b || a.merging || b.merging) continue;
           let dx = b.x - a.x;
           let dy = b.y - a.y;
-          const minDist = (a.r + b.r) * (physics.overlapFactor || 1);
+          // Hard mode keeps the stones almost fully separated; easy/normal preserve the current packing room.
+
+          const overlapFactor = currentDifficultyOption().overlapFactor ?? physics.overlapFactor ?? 1;
+
+          const minDist = (a.r + b.r) * overlapFactor;
           let distSq = dx * dx + dy * dy;
           if (distSq > 0 && distSq < minDist * minDist) {
             let dist = Math.sqrt(distSq);
@@ -714,7 +765,7 @@
       const slow = Math.abs(b.vx) + Math.abs(b.vy) < 125;
       if (oldEnough && slow && b.y - b.r < state.dangerLine) {
         if (!b.settledAboveSince) b.settledAboveSince = now;
-        if (now - b.settledAboveSince > 3500) risky = true;
+        if (now - b.settledAboveSince > currentDifficultyOption().gameOverGraceMs) risky = true;
       } else {
         b.settledAboveSince = null;
       }
@@ -782,19 +833,6 @@
     const scaleX = 1 + (b.squash || 0) * 0.65;
     ctx.scale(scaleX, scaleY);
     ctx.rotate(b.rot * (g.cut === 'ring' ? 0.08 : 0.18));
-
-    // Contact shadow
-    ctx.save();
-    ctx.rotate(-b.rot * 0.18);
-    const sh = ctx.createRadialGradient(0, b.r * 0.45, b.r * 0.12, 0, b.r * 0.45, b.r * 1.08);
-    sh.addColorStop(0, 'rgba(0,0,0,.20)');
-    sh.addColorStop(.58, 'rgba(0,0,0,.08)');
-    sh.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = sh;
-    ctx.beginPath();
-    ctx.ellipse(0, b.r * 0.48, b.r * 0.86, b.r * 0.28, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
 
     if (img && img.complete && img.naturalWidth) {
       const aspect = img.naturalWidth / img.naturalHeight;
@@ -1476,6 +1514,7 @@
   if (dropBtn) dropBtn.addEventListener('click', drop);
   if (restartBtn) restartBtn.addEventListener('click', reset);
   if (restartBtn2) restartBtn2.addEventListener('click', reset);
+  difficultyButtons.forEach(button => button.addEventListener('click', () => setDifficulty(button.dataset.difficulty)));
   if (bgmBtn) {
     bgmBtn.addEventListener('click', () => {
       state.bgmEnabled = true;
