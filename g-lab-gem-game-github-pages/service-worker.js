@@ -1,5 +1,5 @@
-// g-Lab Gem Game v63 complete UI and hard mode update
-const CACHE_NAME = 'g-lab-gem-game-v63-complete-ui-hard-mode';
+// g-Lab Gem Game v66 — hard mode uses normal balance plus flower obstacles
+const CACHE_NAME = 'g-lab-gem-game-v66-hard-flowers-normal-balance';
 const ASSETS = ['./', './index.html', './style.css',
   './assets/outer-bg-art-nouveau.png',
   './assets/g-lab-logo.jpg',
@@ -65,7 +65,11 @@ const ASSETS = ['./', './index.html', './style.css',
   './assets/gem-assets/09-opal.png',
   './assets/gem-assets/10-topaz.png',
   './assets/gem-assets/11-turquoise.png',
-  './assets/gem-assets/12-final-ring.png', './app.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png'];
+  './assets/gem-assets/12-final-ring.png',
+  './assets/flower-assets/marguerite.png',
+  './assets/flower-assets/gerbera.png',
+  './assets/flower-assets/rose.png',
+  './assets/flower-assets/lily.png', './app.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
 });

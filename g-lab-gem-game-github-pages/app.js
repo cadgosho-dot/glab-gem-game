@@ -1,3 +1,4 @@
+// g-Lab Gem Game v66 — hard mode flowers only; normal balance otherwise
 (() => {
   'use strict';
 
@@ -12,7 +13,6 @@
   const bgmBtn = document.getElementById('bgmBtn'); // removed in v10
   const soundBtn = document.getElementById('soundBtn'); // removed in v10
   const restartBtn = document.getElementById('restartBtn');
-  const restartBtn2 = document.getElementById('restartBtn2');
   const difficultyButtons = [...document.querySelectorAll('.difficulty-btn')];
   const gameOverPanel = document.getElementById('gameOver');
   const finalScoreEl = document.getElementById('finalScore');
@@ -65,6 +65,23 @@
     return image;
   });
 
+
+  // Hard mode only: flowers fall as seeds, bloom after their first landing, and never merge.
+  // Flower sizes are tied to the requested gem levels:
+  // Marguerite = Garnet, Gerbera/Rose = Amethyst, Lily = Diamond.
+  const flowers = [
+    { name:'マーガレット', sizeLevel:0, seed:'#b88b31', seedDark:'#6c4612', petal:'#fff8e5', src:'assets/flower-assets/marguerite.png' },
+    { name:'ガーベラ', sizeLevel:1, seed:'#b86d7e', seedDark:'#70333f', petal:'#ffd5df', src:'assets/flower-assets/gerbera.png' },
+    { name:'バラ', sizeLevel:2, seed:'#a71c2b', seedDark:'#520810', petal:'#e83644', src:'assets/flower-assets/rose.png' },
+    { name:'ユリ', sizeLevel:3, seed:'#d6b763', seedDark:'#80651b', petal:'#fffdf4', src:'assets/flower-assets/lily.png' }
+  ];
+
+  const flowerImages = flowers.map(flower => {
+    const image = new Image();
+    image.src = flower.src;
+    return image;
+  });
+
   const state = {
     w: 0,
     h: 0,
@@ -110,6 +127,10 @@
     };
   });
 
+  flowerImages.forEach(image => {
+    image.onload = () => { /* canvas loop will render the finished flower automatically */ };
+  });
+
   const difficultyOptions = {
     easy: {
       // Easy: Garnet, Amethyst and Aquamarine do not appear.
@@ -127,12 +148,12 @@
       gameOverGraceMs: 3500
     },
     hard: {
-      // Hard: all stones are 12% larger, almost cannot overlap,
-      // and the danger-line recovery window is intentionally short.
+      // Hard: identical to normal except that rare permanent flower obstacles can appear.
       bag: [0,0,0,0,0,1,1,1,2,2],
-      sizeScale: 1.12,
-      overlapFactor: 0.99,
-      gameOverGraceMs: 2000
+      sizeScale: 1,
+      overlapFactor: 0.84,
+      gameOverGraceMs: 3500,
+      flowerChance: 1 / 30
     }
   };
 
@@ -143,6 +164,21 @@
   function randomStartLevel() {
     const bag = currentDifficultyOption().bag;
     return bag[Math.floor(Math.random() * bag.length)];
+  }
+
+
+  function randomFlowerIndex() {
+    const option = currentDifficultyOption();
+    if (state.difficulty !== 'hard' || !option.flowerChance) return -1;
+    return Math.random() < option.flowerChance ? Math.floor(Math.random() * flowers.length) : -1;
+  }
+
+  function flowerRadius(flowerIndex) {
+    return gemRadius(flowers[flowerIndex].sizeLevel);
+  }
+
+  function massForRadius(radius, density = 1) {
+    return Math.max(0.18, density * Math.pow(radius / 22, 1.10));
   }
 
   function updateDifficultyButtons() {
@@ -223,14 +259,16 @@
 
   function newBall(level, x, y, opts = {}) {
     const g = gems[level];
+    const r = gemRadius(level);
     return {
       id: ++state.idCounter,
+      kind: 'gem',
       level,
       x,
       y,
-      r: gemRadius(level),
+      r,
       density: g.density || 1,
-      mass: Math.max(0.18, (g.density || 1) * Math.pow(gemRadius(level) / 22, 1.10)),
+      mass: massForRadius(r, g.density || 1),
       vx: opts.vx || 0,
       vy: opts.vy || 0,
       rot: Math.random() * Math.PI * 2,
@@ -240,6 +278,61 @@
       settledAboveSince: null,
       squash: 0
     };
+  }
+
+  function newFlowerBall(flowerIndex, x, y, opts = {}) {
+    const targetR = flowerRadius(flowerIndex);
+    const seedR = Math.max(6, Math.round(targetR * 0.30));
+    const density = 0.96;
+    return {
+      id: ++state.idCounter,
+      kind: 'flower',
+      flowerIndex,
+      x,
+      y,
+      r: seedR,
+      seedR,
+      targetR,
+      density,
+      mass: massForRadius(seedR, density),
+      vx: opts.vx || 0,
+      vy: opts.vy || 0,
+      rot: Math.random() * Math.PI * 2,
+      vr: (Math.random() - 0.5) * 1.10,
+      born: performance.now(),
+      merging: false,
+      settledAboveSince: null,
+      squash: 0,
+      isSeed: true,
+      blooming: false,
+      bloomStart: 0,
+      bloom: 0
+    };
+  }
+
+  function bloomFlower(flower, now = performance.now()) {
+    if (!flower || flower.kind !== 'flower' || !flower.isSeed || flower.blooming) return;
+    flower.blooming = true;
+    flower.bloomStart = now;
+    flower.vr *= 0.42;
+    spawnParticles(flower.x, flower.y, flowers[flower.flowerIndex].petal, 7);
+    playTone('bloom');
+  }
+
+  function stepFlowerBloom(flower, now) {
+    if (!flower || flower.kind !== 'flower' || !flower.blooming) return;
+    const t = Math.min(1, Math.max(0, (now - flower.bloomStart) / 620));
+    const eased = 1 - Math.pow(1 - t, 3);
+    flower.bloom = eased;
+    flower.r = flower.seedR + (flower.targetR - flower.seedR) * eased;
+    flower.mass = massForRadius(flower.r, flower.density || 1);
+    if (t >= 1) {
+      flower.blooming = false;
+      flower.isSeed = false;
+      flower.bloom = 1;
+      flower.r = flower.targetR;
+      flower.mass = massForRadius(flower.r, flower.density || 1);
+    }
   }
 
   function ensureAudio() {
@@ -476,6 +569,12 @@
         starSweep(1760.00, 0.115, 0.040);
         bell(4698.64, 0.245, 0.22, 0.026, 'sine');
       }
+    } else if (kind === 'bloom') {
+      // Seed opening: a short, warm harp-like "poron".
+      bell(523.25, 0.000, 0.34, 0.040, 'triangle');
+      bell(659.25, 0.075, 0.40, 0.034, 'sine');
+      bell(783.99, 0.145, 0.46, 0.028, 'sine');
+      bell(1046.50, 0.235, 0.42, 0.019, 'triangle');
     } else if (kind === 'gameover') {
       // 終了音は落ち着いたチャイムにしつつ、暗すぎない響き
       bell(783.99, 0.000, 0.36, 0.040, 'triangle');
@@ -564,9 +663,17 @@
     ensureAudio();
     syncBgm();
     const level = state.current;
-    const r = gemRadius(level);
     const x = clampDropX(state.dropX || state.w / 2);
-    state.balls.push(newBall(level, x, state.spawnY + r * 0.10, { vy: 34 }));
+    const flowerIndex = randomFlowerIndex();
+
+    if (flowerIndex >= 0) {
+      const seedR = Math.max(6, Math.round(flowerRadius(flowerIndex) * 0.30));
+      state.balls.push(newFlowerBall(flowerIndex, x, state.spawnY + seedR * 0.18, { vy: 34 }));
+    } else {
+      const r = gemRadius(level);
+      state.balls.push(newBall(level, x, state.spawnY + r * 0.10, { vy: 34 }));
+    }
+
     state.current = state.next;
     state.next = randomStartLevel();
     state.canDrop = false;
@@ -646,11 +753,11 @@
     const balls = state.balls;
     for (let i = 0; i < balls.length; i++) {
       const a = balls[i];
-      if (!a || a.merging || a.level >= gems.length - 1) continue;
+      if (!a || a.kind === 'flower' || a.merging || a.level >= gems.length - 1) continue;
       if (now - a.born < 60) continue;
       for (let j = i + 1; j < balls.length; j++) {
         const b = balls[j];
-        if (!b || b.merging || a.level !== b.level) continue;
+        if (!b || b.kind === 'flower' || b.merging || a.level !== b.level) continue;
         if (now - b.born < 60) continue;
         const dx = b.x - a.x;
         const dy = b.y - a.y;
@@ -673,6 +780,7 @@
       b.vx *= physics.friction;
       b.vy *= 0.999;
       b.squash *= 0.9;
+      stepFlowerBloom(b, now);
 
       if (b.x - b.r < 13) {
         b.x = 13 + b.r;
@@ -686,6 +794,7 @@
       }
       if (b.y + b.r > state.h - 13) {
         b.y = state.h - 13 - b.r;
+        if (b.kind === 'flower' && b.isSeed) bloomFlower(b, now);
         if (Math.abs(b.vy) > 180) b.squash = Math.min(0.12, Math.abs(b.vy) / 4200);
         b.vy = -Math.abs(b.vy) * physics.wallBounce;
         b.vx *= physics.floorFriction;
@@ -709,13 +818,15 @@
           if (!a || !b || a.merging || b.merging) continue;
           let dx = b.x - a.x;
           let dy = b.y - a.y;
-          // Hard mode keeps the stones almost fully separated; easy/normal preserve the current packing room.
+          // Hard mode now preserves the same packing room as normal; flowers alone add the extra challenge.
 
           const overlapFactor = currentDifficultyOption().overlapFactor ?? physics.overlapFactor ?? 1;
 
           const minDist = (a.r + b.r) * overlapFactor;
           let distSq = dx * dx + dy * dy;
           if (distSq > 0 && distSq < minDist * minDist) {
+            if (a.kind === 'flower' && a.isSeed) bloomFlower(a, now);
+            if (b.kind === 'flower' && b.isSeed) bloomFlower(b, now);
             let dist = Math.sqrt(distSq);
             if (dist < 0.0001) {
               dist = 0.0001;
@@ -865,6 +976,67 @@
     ctx.restore();
   }
 
+
+  function drawSeed(b) {
+    const flower = flowers[b.flowerIndex];
+    const r = b.r;
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.rot * 0.25);
+    // No shadow: seed is intentionally flat and clean like the gems.
+    const grad = ctx.createRadialGradient(-r * .28, -r * .34, r * .10, 0, 0, r);
+    grad.addColorStop(0, '#fff1a5');
+    grad.addColorStop(.28, flower.seed);
+    grad.addColorStop(1, flower.seedDark);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r * .78, r, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.45)';
+    ctx.lineWidth = Math.max(.7, r * .12);
+    ctx.beginPath();
+    ctx.moveTo(-r * .20, -r * .52);
+    ctx.lineTo(r * .14, r * .42);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawFlower(b) {
+    if (b.isSeed && !b.blooming) {
+      drawSeed(b);
+      return;
+    }
+
+    const image = flowerImages[b.flowerIndex];
+    const bloom = Math.max(0.16, b.bloom || 0.16);
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.rot * 0.10);
+    const scaleY = 1 - (b.squash || 0) * .55;
+    const scaleX = 1 + (b.squash || 0) * .35;
+    ctx.scale(scaleX, scaleY);
+
+    if (image && image.complete && image.naturalWidth) {
+      const aspect = image.naturalWidth / image.naturalHeight;
+      let drawH = b.r * 2.16;
+      let drawW = drawH * aspect;
+      if (drawW > b.r * 2.34) {
+        drawW = b.r * 2.34;
+        drawH = drawW / aspect;
+      }
+      // A quick expansion from seed to bloom; no extra shadow is added.
+      ctx.globalAlpha = Math.min(1, .52 + bloom * .48);
+      ctx.drawImage(image, -drawW / 2, -drawH / 2, drawW, drawH);
+    } else {
+      drawSeed(b);
+    }
+    ctx.restore();
+  }
+
+  function drawBall(b) {
+    if (b.kind === 'flower') drawFlower(b);
+    else drawGem(b);
+  }
 
   function textColorFor(g) {
     if (g.cut === 'diamond' || g.cut === 'pearl' || g.cut === 'turquoise' || g.name === 'トパーズ') return '#253044';
@@ -1471,7 +1643,7 @@
     drawBackground();
     drawFireworks();
     const sorted = [...state.balls].sort((a,b)=>a.r-b.r);
-    for (const b of sorted) drawGem(b);
+    for (const b of sorted) drawBall(b);
     drawParticles();
     drawPreview();
   }
@@ -1513,7 +1685,6 @@
 
   if (dropBtn) dropBtn.addEventListener('click', drop);
   if (restartBtn) restartBtn.addEventListener('click', reset);
-  if (restartBtn2) restartBtn2.addEventListener('click', reset);
   difficultyButtons.forEach(button => button.addEventListener('click', () => setDifficulty(button.dataset.difficulty)));
   if (bgmBtn) {
     bgmBtn.addEventListener('click', () => {

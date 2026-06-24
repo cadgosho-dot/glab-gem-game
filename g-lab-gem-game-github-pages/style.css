@@ -508,3 +508,12 @@ body{
   .gem-hud-preview canvas{width:30px !important;height:30px !important;}
   .difficulty-btn{min-height:34px;padding:7px 6px;}
 }
+
+
+/* v64: the bottom reset control has been removed. Let the play field use that freed vertical space. */
+.app > .game-wrap{
+  flex:1 1 auto !important;
+}
+
+
+/* v65: hard mode adds permanent flower obstacles; no flower shadows are drawn in canvas. */
