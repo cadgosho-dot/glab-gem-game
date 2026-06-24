@@ -1,5 +1,5 @@
-// g-Lab Gem Game v62 hard mode tuned
-const CACHE_NAME = 'g-lab-gem-game-v62-hard-mode-tuned';
+// g-Lab Gem Game v63 complete UI and hard mode update
+const CACHE_NAME = 'g-lab-gem-game-v63-complete-ui-hard-mode';
 const ASSETS = ['./', './index.html', './style.css',
   './assets/outer-bg-art-nouveau.png',
   './assets/g-lab-logo.jpg',
