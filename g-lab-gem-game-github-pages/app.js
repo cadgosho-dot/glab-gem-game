@@ -1,4 +1,4 @@
-// g-Lab Gem Game v66 — hard mode flowers only; normal balance otherwise
+// g-Lab Gem Game v67 — updated flower obstacle sizes
 (() => {
   'use strict';
 
@@ -68,12 +68,12 @@
 
   // Hard mode only: flowers fall as seeds, bloom after their first landing, and never merge.
   // Flower sizes are tied to the requested gem levels:
-  // Marguerite = Garnet, Gerbera/Rose = Amethyst, Lily = Diamond.
+  // Marguerite = Aquamarine, Gerbera = Diamond, Rose = Emerald, Lily = Pearl.
   const flowers = [
-    { name:'マーガレット', sizeLevel:0, seed:'#b88b31', seedDark:'#6c4612', petal:'#fff8e5', src:'assets/flower-assets/marguerite.png' },
-    { name:'ガーベラ', sizeLevel:1, seed:'#b86d7e', seedDark:'#70333f', petal:'#ffd5df', src:'assets/flower-assets/gerbera.png' },
-    { name:'バラ', sizeLevel:2, seed:'#a71c2b', seedDark:'#520810', petal:'#e83644', src:'assets/flower-assets/rose.png' },
-    { name:'ユリ', sizeLevel:3, seed:'#d6b763', seedDark:'#80651b', petal:'#fffdf4', src:'assets/flower-assets/lily.png' }
+    { name:'マーガレット', sizeLevel:2, seed:'#b88b31', seedDark:'#6c4612', petal:'#fff8e5', src:'assets/flower-assets/marguerite.png' },
+    { name:'ガーベラ', sizeLevel:3, seed:'#b86d7e', seedDark:'#70333f', petal:'#ffd5df', src:'assets/flower-assets/gerbera.png' },
+    { name:'バラ', sizeLevel:4, seed:'#a71c2b', seedDark:'#520810', petal:'#e83644', src:'assets/flower-assets/rose.png' },
+    { name:'ユリ', sizeLevel:5, seed:'#d6b763', seedDark:'#80651b', petal:'#fffdf4', src:'assets/flower-assets/lily.png' }
   ];
 
   const flowerImages = flowers.map(flower => {

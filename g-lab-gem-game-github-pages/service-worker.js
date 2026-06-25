@@ -1,5 +1,5 @@
-// g-Lab Gem Game v66 — hard mode uses normal balance plus flower obstacles
-const CACHE_NAME = 'g-lab-gem-game-v66-hard-flowers-normal-balance';
+// g-Lab Gem Game v67 — updated flower sizes for hard mode obstacles
+const CACHE_NAME = 'g-lab-gem-game-v67-flower-size-update';
 const ASSETS = ['./', './index.html', './style.css',
   './assets/outer-bg-art-nouveau.png',
   './assets/g-lab-logo.jpg',
