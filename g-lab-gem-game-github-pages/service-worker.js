@@ -1,5 +1,5 @@
-// g-Lab Gem Game v67 — updated flower sizes for hard mode obstacles
-const CACHE_NAME = 'g-lab-gem-game-v67-flower-size-update';
+// g-Lab Gem Game v68 — updated flower sizes for hard mode obstacles
+const CACHE_NAME = 'g-lab-gem-game-v68-flower-size-plus20';
 const ASSETS = ['./', './index.html', './style.css',
   './assets/outer-bg-art-nouveau.png',
   './assets/g-lab-logo.jpg',

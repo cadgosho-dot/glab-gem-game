@@ -1,4 +1,4 @@
-// g-Lab Gem Game v67 — updated flower obstacle sizes
+// g-Lab Gem Game v68 — flowers enlarged by 20 percent
 (() => {
   'use strict';
 
@@ -174,7 +174,7 @@
   }
 
   function flowerRadius(flowerIndex) {
-    return gemRadius(flowers[flowerIndex].sizeLevel);
+    return gemRadius(flowers[flowerIndex].sizeLevel) * 1.2;
   }
 
   function massForRadius(radius, density = 1) {
