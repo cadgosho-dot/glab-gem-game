@@ -1,16 +1,14 @@
-g-Lab. 宝石ゲーム v70 更新手順
+g-Lab. 宝石ゲーム v72 更新手順
 
-今回の変更
-- むつかしいモードのユリ画像を、新しい白〜淡ピンクのユリへ差し替えました。
+変更内容
+- DANGER LINEを盤面上端（天井）のすぐ下へ移動
+- 石・花の実際の輪郭が天井に触れた時点で、すぐゲームオーバー
+- これまでの「落ち着くまで待つ」「数秒の猶予」を廃止
+- 新しく落とした直後だけ、誤判定防止のため約0.5秒は判定しません
 
-コピーするものは2つだけです。
-1. service-worker.js
-2. assets フォルダ
+コピーするもの
+1. app.js
+2. service-worker.js
 
-コピー先
-C:\Users\gosho\Documents\GitHub\glab-gem-game\g-lab-gem-game-github-pages\
-
-assets フォルダをコピーする時は、既存フォルダと結合し、lily.png の置き換えを許可してください。
-README はコピー不要です。
-
-GitHub Desktop に戻り、変更が表示されたら Commit → Push origin を押してください。
+READMEやassetsフォルダはコピー不要です。
+GitHub DesktopでCommit → Push originを行ってください。

@@ -1,4 +1,4 @@
-// g-Lab Gem Game v68 — flowers enlarged by 20 percent
+// g-Lab Gem Game v69 — precise visible-outline danger line detection
 (() => {
   'use strict';
 
@@ -207,7 +207,9 @@
     canvas.width = Math.floor(state.w * state.dpr);
     canvas.height = Math.floor(state.h * state.dpr);
     ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
-    state.dangerLine = Math.max(54, Math.round(state.h * 0.17) - 32);
+    // The dashed DANGER LINE now sits directly under the board ceiling.
+    // Touching it is the game-over condition.
+    state.dangerLine = 20;
     state.spawnY = Math.max(48, Math.round(state.dangerLine * 0.48));
     state.dropX = state.dropX || state.w / 2;
     updateGuide();
@@ -868,20 +870,171 @@
     checkGameOver(now);
   }
 
-  function checkGameOver(now) {
-    if (state.gameOver) return;
-    let risky = false;
-    for (const b of state.balls) {
-      const oldEnough = now - b.born > 2600;
-      const slow = Math.abs(b.vx) + Math.abs(b.vy) < 125;
-      if (oldEnough && slow && b.y - b.r < state.dangerLine) {
-        if (!b.settledAboveSince) b.settledAboveSince = now;
-        if (now - b.settledAboveSince > currentDifficultyOption().gameOverGraceMs) risky = true;
-      } else {
-        b.settledAboveSince = null;
+
+  // Danger-line detection uses each rendered image's visible alpha contour instead of
+  // a simple circle radius. This keeps the timer aligned with the actual stone/flower
+  // outline, including oval stones, petals, and rotation.
+  const imageContourCache = new WeakMap();
+
+  function getImageContour(image) {
+    if (!image || !image.complete || !image.naturalWidth || !image.naturalHeight) return null;
+    if (imageContourCache.has(image)) return imageContourCache.get(image);
+
+    try {
+      const sampleSize = 56;
+      const probe = document.createElement('canvas');
+      probe.width = sampleSize;
+      probe.height = sampleSize;
+      const pctx = probe.getContext('2d', { willReadFrequently: true });
+      pctx.clearRect(0, 0, sampleSize, sampleSize);
+      pctx.drawImage(image, 0, 0, sampleSize, sampleSize);
+      const data = pctx.getImageData(0, 0, sampleSize, sampleSize).data;
+      const threshold = 72;
+      const alphaAt = (x, y) => {
+        if (x < 0 || y < 0 || x >= sampleSize || y >= sampleSize) return 0;
+        return data[(y * sampleSize + x) * 4 + 3];
+      };
+      const points = [];
+
+      for (let y = 0; y < sampleSize; y += 1) {
+        for (let x = 0; x < sampleSize; x += 1) {
+          if (alphaAt(x, y) < threshold) continue;
+          const isEdge = alphaAt(x - 1, y) < threshold || alphaAt(x + 1, y) < threshold ||
+            alphaAt(x, y - 1) < threshold || alphaAt(x, y + 1) < threshold;
+          if (isEdge) {
+            points.push({
+              x: (x + 0.5) / sampleSize - 0.5,
+              y: (y + 0.5) / sampleSize - 0.5
+            });
+          }
+        }
+      }
+
+      const contour = points.length ? points : null;
+      imageContourCache.set(image, contour);
+      return contour;
+    } catch (error) {
+      // Local files or older browsers may refuse pixel reads. The circle fallback below
+      // keeps the game playable in that case.
+      imageContourCache.set(image, null);
+      return null;
+    }
+  }
+
+  function gemDrawMetrics(b) {
+    const g = gems[b.level];
+    const image = gemImages[b.level];
+    if (!image || !image.complete || !image.naturalWidth) return null;
+
+    const aspect = image.naturalWidth / image.naturalHeight;
+    let drawW;
+    let drawH;
+    if (g.cut === 'ring') {
+      drawW = b.r * 2.35;
+      drawH = drawW / aspect;
+      if (drawH > b.r * 1.42) {
+        drawH = b.r * 1.42;
+        drawW = drawH * aspect;
+      }
+    } else {
+      drawH = b.r * 2.10;
+      drawW = drawH * aspect;
+      if (drawW > b.r * 2.25) {
+        drawW = b.r * 2.25;
+        drawH = drawW / aspect;
       }
     }
-    if (risky) {
+    return {
+      image,
+      drawW,
+      drawH,
+      angle: b.rot * (g.cut === 'ring' ? 0.08 : 0.18),
+      scaleX: 1 + (b.squash || 0) * 0.65,
+      scaleY: 1 - (b.squash || 0)
+    };
+  }
+
+  function flowerDrawMetrics(b) {
+    const image = flowerImages[b.flowerIndex];
+    if (!image || !image.complete || !image.naturalWidth) return null;
+
+    const aspect = image.naturalWidth / image.naturalHeight;
+    let drawH = b.r * 2.16;
+    let drawW = drawH * aspect;
+    if (drawW > b.r * 2.34) {
+      drawW = b.r * 2.34;
+      drawH = drawW / aspect;
+    }
+    return {
+      image,
+      drawW,
+      drawH,
+      angle: b.rot * 0.10,
+      scaleX: 1 + (b.squash || 0) * 0.35,
+      scaleY: 1 - (b.squash || 0) * 0.55
+    };
+  }
+
+  function contourTopY(b, metrics, transformOrder) {
+    const contour = getImageContour(metrics.image);
+    if (!contour) return b.y - b.r;
+
+    const cos = Math.cos(metrics.angle);
+    const sin = Math.sin(metrics.angle);
+    let top = Infinity;
+
+    for (const point of contour) {
+      const localX = point.x * metrics.drawW;
+      const localY = point.y * metrics.drawH;
+      let y;
+      if (transformOrder === 'scale-then-rotate') {
+        // drawFlower: translate → rotate → scale
+        const scaledX = localX * metrics.scaleX;
+        const scaledY = localY * metrics.scaleY;
+        y = b.y + sin * scaledX + cos * scaledY;
+      } else {
+        // drawGem: translate → scale → rotate
+        const rotatedY = sin * localX + cos * localY;
+        y = b.y + rotatedY * metrics.scaleY;
+      }
+      if (y < top) top = y;
+    }
+    return Number.isFinite(top) ? top : b.y - b.r;
+  }
+
+  function visibleTopY(b) {
+    if (b.kind === 'flower') {
+      if (b.isSeed && !b.blooming) {
+        const angle = b.rot * 0.25;
+        const rx = b.r * 0.78;
+        const ry = b.r;
+        const verticalRadius = Math.sqrt(
+          Math.pow(rx * Math.sin(angle), 2) + Math.pow(ry * Math.cos(angle), 2)
+        );
+        return b.y - verticalRadius;
+      }
+      const flowerMetrics = flowerDrawMetrics(b);
+      return flowerMetrics ? contourTopY(b, flowerMetrics, 'scale-then-rotate') : b.y - b.r;
+    }
+
+    const gemMetrics = gemDrawMetrics(b);
+    return gemMetrics ? contourTopY(b, gemMetrics, 'rotate-then-scale') : b.y - b.r;
+  }
+
+  function checkGameOver(now) {
+    if (state.gameOver) return;
+
+    // A ball receives only a short spawn buffer so a newly released large gem
+    // can clear the ceiling area. After that, touching the top game-over line
+    // ends the game immediately—no "settled" or multi-second grace period.
+    const spawnBufferMs = 480;
+    const touchesCeiling = state.balls.some(b => {
+      if (!b || b.merging) return false;
+      if (now - b.born < spawnBufferMs) return false;
+      return visibleTopY(b) <= state.dangerLine + 1;
+    });
+
+    if (touchesCeiling) {
       state.gameOver = true;
       state.canDrop = false;
       updateBest();

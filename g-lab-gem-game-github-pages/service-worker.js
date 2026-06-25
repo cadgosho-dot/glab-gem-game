@@ -1,5 +1,5 @@
-// g-Lab Gem Game v70 — replaced lily flower image
-const CACHE_NAME = 'g-lab-gem-game-v70-new-lily-image';
+// g-Lab Gem Game v72 — immediate ceiling-contact game over
+const CACHE_NAME = 'g-lab-gem-game-v72-ceiling-contact-gameover';
 const ASSETS = ['./', './index.html', './style.css',
   './assets/outer-bg-art-nouveau.png',
   './assets/g-lab-logo.jpg',
