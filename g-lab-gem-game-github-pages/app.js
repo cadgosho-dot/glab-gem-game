@@ -1,4 +1,4 @@
-// g-Lab Gem Game v69 — precise visible-outline danger line detection
+// g-Lab Gem Game v81 — ume flower reduced by 12%
 (() => {
   'use strict';
 
@@ -67,13 +67,14 @@
 
 
   // Hard mode only: flowers fall as seeds, bloom after their first landing, and never merge.
-  // Flower sizes are tied to the requested gem levels:
-  // Marguerite = Aquamarine, Gerbera = Diamond, Rose = Emerald, Lily = Pearl.
+  // Flower sizes are tied to the requested gem levels.
+  // 梅 uses the Aquamarine level but is reduced by 12% from its prior size.
+  // 藤 = Diamond, 菊 = Emerald, 牡丹 = Pearl.
   const flowers = [
-    { name:'マーガレット', sizeLevel:2, seed:'#b88b31', seedDark:'#6c4612', petal:'#fff8e5', src:'assets/flower-assets/marguerite.png' },
-    { name:'ガーベラ', sizeLevel:3, seed:'#b86d7e', seedDark:'#70333f', petal:'#ffd5df', src:'assets/flower-assets/gerbera.png' },
-    { name:'バラ', sizeLevel:4, seed:'#a71c2b', seedDark:'#520810', petal:'#e83644', src:'assets/flower-assets/rose.png' },
-    { name:'ユリ', sizeLevel:5, seed:'#d6b763', seedDark:'#80651b', petal:'#fffdf4', src:'assets/flower-assets/lily.png' }
+    { name:'梅', sizeLevel:2, scale:0.88, seed:'#d78b9d', seedDark:'#754251', petal:'#fff0f5', src:'assets/flower-assets/marguerite.png' },
+    { name:'藤', sizeLevel:3, scale:1, seed:'#8e79c9', seedDark:'#4a397a', petal:'#d9ccff', src:'assets/flower-assets/gerbera.png' },
+    { name:'菊', sizeLevel:4, scale:1, seed:'#d6a426', seedDark:'#74520d', petal:'#ffd75a', src:'assets/flower-assets/rose.png' },
+    { name:'牡丹', sizeLevel:5, scale:1, seed:'#8c2633', seedDark:'#420711', petal:'#e0202a', src:'assets/flower-assets/lily.png' }
   ];
 
   const flowerImages = flowers.map(flower => {
@@ -82,6 +83,9 @@
     return image;
   });
 
+  // Hard-mode flowers are permanent obstacles only.
+  const COMBO_WINDOW_MS = 1500;
+
   const state = {
     w: 0,
     h: 0,
@@ -89,7 +93,10 @@
     balls: [],
     particles: [],
     fireworks: [],
+    floatingTexts: [],
     score: 0,
+    comboCount: 0,
+    comboLastAt: 0,
     best: Number(localStorage.getItem('glabGemBest') || 0),
     current: 0,
     next: 1,
@@ -174,7 +181,9 @@
   }
 
   function flowerRadius(flowerIndex) {
-    return gemRadius(flowers[flowerIndex].sizeLevel) * 1.2;
+    const flower = flowers[flowerIndex];
+    const scale = typeof flower.scale === 'number' ? flower.scale : 1;
+    return gemRadius(flower.sizeLevel) * 1.2 * scale;
   }
 
   function massForRadius(radius, density = 1) {
@@ -278,6 +287,7 @@
       born: performance.now(),
       merging: false,
       settledAboveSince: null,
+      ceilingHalfSince: null,
       squash: 0
     };
   }
@@ -304,6 +314,7 @@
       born: performance.now(),
       merging: false,
       settledAboveSince: null,
+      ceilingHalfSince: null,
       squash: 0,
       isSeed: true,
       blooming: false,
@@ -695,7 +706,10 @@
     state.balls = [];
     state.particles = [];
     state.fireworks = [];
+    state.floatingTexts = [];
     state.score = 0;
+    state.comboCount = 0;
+    state.comboLastAt = 0;
     state.current = randomStartLevel();
     state.next = randomStartLevel();
     state.dropX = state.w / 2;
@@ -717,7 +731,43 @@
     }
   }
 
-  function mergeBalls(a, b) {
+  function comboMultiplierFor(count) {
+    if (count >= 4) return 2;
+    if (count === 3) return 1.5;
+    if (count === 2) return 1.2;
+    return 1;
+  }
+
+  function registerCombo(now) {
+    if (state.comboLastAt && now - state.comboLastAt <= COMBO_WINDOW_MS) {
+      state.comboCount += 1;
+    } else {
+      state.comboCount = 1;
+    }
+    state.comboLastAt = now;
+    return {
+      count: state.comboCount,
+      multiplier: comboMultiplierFor(state.comboCount)
+    };
+  }
+
+  function spawnFloatingText(x, y, text, options = {}) {
+    state.floatingTexts.push({
+      x,
+      y,
+      text,
+      vx: options.vx ?? (Math.random() - 0.5) * 16,
+      vy: options.vy ?? -42,
+      life: options.life ?? 1.05,
+      maxLife: options.life ?? 1.05,
+      size: options.size ?? 18,
+      color: options.color ?? '#9d6b20',
+      stroke: options.stroke ?? 'rgba(255,255,255,.92)',
+      weight: options.weight ?? 900
+    });
+  }
+
+  function mergeBalls(a, b, now = performance.now()) {
     if (a.merging || b.merging || a.level !== b.level || a.level >= gems.length - 1) return false;
     a.merging = b.merging = true;
     const nx = (a.x + b.x) / 2;
@@ -725,11 +775,25 @@
     const nvx = (a.vx + b.vx) * 0.22;
     const nextLevel = a.level + 1;
     const nvy = (a.vy + b.vy) * 0.15 - Math.max(52, 118 - nextLevel * 5);
+    const mergedRadius = gemRadius(nextLevel);
+    const combo = registerCombo(now);
+    const baseScore = gems[nextLevel].value * 10;
+    const comboScore = Math.round(baseScore * combo.multiplier);
     state.balls = state.balls.filter(ball => ball !== a && ball !== b);
     state.balls.push(newBall(nextLevel, nx, ny, { vx: nvx, vy: nvy }));
-    state.score += gems[nextLevel].value * 10;
+    state.score += comboScore;
     updateBest();
+
     spawnParticles(nx, ny, gems[nextLevel].accent, 8 + Math.min(nextLevel * 2, 22));
+    if (combo.count >= 2) {
+      const multiplierText = combo.multiplier.toFixed(combo.multiplier % 1 ? 1 : 0);
+      spawnFloatingText(nx, ny - mergedRadius * 0.45, `${combo.count} COMBO ×${multiplierText}`, {
+        color: combo.count >= 4 ? '#b06205' : '#9d6b20',
+        size: combo.count >= 4 ? 22 : 19,
+        life: 1.1,
+        vy: -48
+      });
+    }
     if (nextLevel === gems.length - 1) {
       launchCelebrationFireworks();
       setTimeout(() => spawnFireworkBurst(state.w * 0.18, state.h * 0.20, 44, '#ffd978'), 120);
@@ -749,6 +813,14 @@
       p.life -= dt;
     }
     state.particles = state.particles.filter(p => p.life > 0);
+
+    for (const label of state.floatingTexts) {
+      label.x += label.vx * dt;
+      label.y += label.vy * dt;
+      label.vy -= 10 * dt;
+      label.life -= dt;
+    }
+    state.floatingTexts = state.floatingTexts.filter(label => label.life > 0);
   }
 
   function findMergePair(now) {
@@ -773,6 +845,10 @@
   function step(dt) {
     const now = performance.now();
     const balls = state.balls;
+
+    if (state.comboCount > 0 && now - state.comboLastAt > COMBO_WINDOW_MS) {
+      state.comboCount = 0;
+    }
 
     for (const b of balls) {
       b.vy += physics.gravity * (b.density || 1) * dt;
@@ -807,7 +883,7 @@
     // and prevents too many pieces from accumulating and slowing the game down.
     const pair = findMergePair(now);
     if (pair) {
-      mergeBalls(pair[0], pair[1]);
+      mergeBalls(pair[0], pair[1], now);
       stepParticles(dt);
       checkGameOver(now);
       return;
@@ -975,13 +1051,14 @@
     };
   }
 
-  function contourTopY(b, metrics, transformOrder) {
+  function contourBoundsY(b, metrics, transformOrder) {
     const contour = getImageContour(metrics.image);
-    if (!contour) return b.y - b.r;
+    if (!contour) return { top: b.y - b.r, bottom: b.y + b.r };
 
     const cos = Math.cos(metrics.angle);
     const sin = Math.sin(metrics.angle);
     let top = Infinity;
+    let bottom = -Infinity;
 
     for (const point of contour) {
       const localX = point.x * metrics.drawW;
@@ -998,11 +1075,15 @@
         y = b.y + rotatedY * metrics.scaleY;
       }
       if (y < top) top = y;
+      if (y > bottom) bottom = y;
     }
-    return Number.isFinite(top) ? top : b.y - b.r;
+
+    return Number.isFinite(top) && Number.isFinite(bottom)
+      ? { top, bottom }
+      : { top: b.y - b.r, bottom: b.y + b.r };
   }
 
-  function visibleTopY(b) {
+  function visibleBoundsY(b) {
     if (b.kind === 'flower') {
       if (b.isSeed && !b.blooming) {
         const angle = b.rot * 0.25;
@@ -1011,30 +1092,54 @@
         const verticalRadius = Math.sqrt(
           Math.pow(rx * Math.sin(angle), 2) + Math.pow(ry * Math.cos(angle), 2)
         );
-        return b.y - verticalRadius;
+        return { top: b.y - verticalRadius, bottom: b.y + verticalRadius };
       }
       const flowerMetrics = flowerDrawMetrics(b);
-      return flowerMetrics ? contourTopY(b, flowerMetrics, 'scale-then-rotate') : b.y - b.r;
+      return flowerMetrics
+        ? contourBoundsY(b, flowerMetrics, 'scale-then-rotate')
+        : { top: b.y - b.r, bottom: b.y + b.r };
     }
 
     const gemMetrics = gemDrawMetrics(b);
-    return gemMetrics ? contourTopY(b, gemMetrics, 'rotate-then-scale') : b.y - b.r;
+    return gemMetrics
+      ? contourBoundsY(b, gemMetrics, 'rotate-then-scale')
+      : { top: b.y - b.r, bottom: b.y + b.r };
   }
 
   function checkGameOver(now) {
     if (state.gameOver) return;
 
-    // A ball receives only a short spawn buffer so a newly released large gem
-    // can clear the ceiling area. After that, touching the top game-over line
-    // ends the game immediately—no "settled" or multi-second grace period.
+    // A newly released piece receives a short buffer before it can start the
+    // ceiling timer. Once half or more of its visible height is above the
+    // ceiling, it must return below that threshold within 1.5 seconds.
     const spawnBufferMs = 480;
-    const touchesCeiling = state.balls.some(b => {
-      if (!b || b.merging) return false;
-      if (now - b.born < spawnBufferMs) return false;
-      return visibleTopY(b) <= state.dangerLine + 1;
-    });
+    const halfOverGraceMs = 1500;
+    let exceedsHalfForTooLong = false;
 
-    if (touchesCeiling) {
+    for (const b of state.balls) {
+      if (!b || b.merging) continue;
+
+      if (now - b.born < spawnBufferMs) {
+        b.ceilingHalfSince = null;
+        continue;
+      }
+
+      const bounds = visibleBoundsY(b);
+      const visibleMidpoint = (bounds.top + bounds.bottom) / 2;
+      const isMoreThanHalfAboveCeiling = visibleMidpoint <= state.dangerLine;
+
+      if (isMoreThanHalfAboveCeiling) {
+        if (b.ceilingHalfSince == null) b.ceilingHalfSince = now;
+        if (now - b.ceilingHalfSince >= halfOverGraceMs) {
+          exceedsHalfForTooLong = true;
+          break;
+        }
+      } else {
+        b.ceilingHalfSince = null;
+      }
+    }
+
+    if (exceedsHalfForTooLong) {
       state.gameOver = true;
       state.canDrop = false;
       updateBest();
@@ -1663,19 +1768,6 @@
     ctx.stroke();
     ctx.restore();
 
-    ctx.save();
-    ctx.strokeStyle = 'rgba(214,107,134,.48)';
-    ctx.setLineDash([8, 8]);
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(21, state.dangerLine);
-    ctx.lineTo(state.w - 21, state.dangerLine);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = 'rgba(180,80,105,.68)';
-    ctx.font = '800 11px system-ui';
-    ctx.fillText('DANGER LINE', 24, state.dangerLine - 8);
-    ctx.restore();
   }
 
   function roundRectPath(x, y, w, h, r) {
@@ -1792,12 +1884,30 @@
     }
   }
 
+  function drawFloatingTexts() {
+    for (const label of state.floatingTexts) {
+      const alpha = Math.max(0, Math.min(1, label.life / label.maxLife));
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.font = `${label.weight} ${Math.round(label.size)}px system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.lineWidth = Math.max(2.1, label.size * 0.14);
+      ctx.strokeStyle = label.stroke;
+      ctx.fillStyle = label.color;
+      ctx.strokeText(label.text, label.x, label.y);
+      ctx.fillText(label.text, label.x, label.y);
+      ctx.restore();
+    }
+  }
+
   function render() {
     drawBackground();
     drawFireworks();
     const sorted = [...state.balls].sort((a,b)=>a.r-b.r);
     for (const b of sorted) drawBall(b);
     drawParticles();
+    drawFloatingTexts();
     drawPreview();
   }
 
