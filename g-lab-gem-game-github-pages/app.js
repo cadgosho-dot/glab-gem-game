@@ -1,4 +1,4 @@
-// g-Lab Gem Game v82 — combo scoring retained without combo text display
+// g-Lab Gem Game v83 — 藤の花を芍薬画像に差し替え
 (() => {
   'use strict';
 
@@ -69,10 +69,10 @@
   // Hard mode only: flowers fall as seeds, bloom after their first landing, and never merge.
   // Flower sizes are tied to the requested gem levels.
   // 梅 uses the Aquamarine level but is reduced by 12% from its prior size.
-  // 藤 = Diamond, 菊 = Emerald, 牡丹 = Pearl.
+  // 芍薬 = Diamond, 菊 = Emerald, 牡丹 = Pearl.
   const flowers = [
     { name:'梅', sizeLevel:2, scale:0.88, seed:'#d78b9d', seedDark:'#754251', petal:'#fff0f5', src:'assets/flower-assets/marguerite.png' },
-    { name:'藤', sizeLevel:3, scale:1, seed:'#8e79c9', seedDark:'#4a397a', petal:'#d9ccff', src:'assets/flower-assets/gerbera.png' },
+    { name:'芍薬', sizeLevel:3, scale:1, seed:'#d9b8c7', seedDark:'#7f5564', petal:'#fff7fb', src:'assets/flower-assets/gerbera.png' },
     { name:'菊', sizeLevel:4, scale:1, seed:'#d6a426', seedDark:'#74520d', petal:'#ffd75a', src:'assets/flower-assets/rose.png' },
     { name:'牡丹', sizeLevel:5, scale:1, seed:'#8c2633', seedDark:'#420711', petal:'#e0202a', src:'assets/flower-assets/lily.png' }
   ];

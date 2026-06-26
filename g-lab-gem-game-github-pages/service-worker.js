@@ -1,5 +1,5 @@
-// g-Lab Gem Game v82 — combo display removed
-const CACHE_NAME = 'g-lab-gem-game-v82-no-combo-display';
+// g-Lab Gem Game v83 — peony image replaces wisteria slot
+const CACHE_NAME = 'g-lab-gem-game-v83-peony-flower-update';
 const ASSETS = ['./', './index.html', './style.css',
   './assets/outer-bg-art-nouveau.png',
   './assets/g-lab-logo.jpg',
