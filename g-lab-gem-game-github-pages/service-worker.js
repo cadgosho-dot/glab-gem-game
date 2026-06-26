@@ -1,81 +1,57 @@
-// g-Lab Gem Game v84 — final flower set: ume, shakuyaku, kiku, botan
-const CACHE_NAME = 'g-lab-gem-game-v84-final-flowers';
-const ASSETS = ['./', './index.html', './style.css',
-  './assets/outer-bg-art-nouveau.png',
-  './assets/g-lab-logo.jpg',
-  './assets/approved-source-00-garnet.png',
-  './assets/approved-image-manifest-v45.txt',
-  './assets/approved-00-garnet.png',
-  './assets/approved-01-amethyst.png',
-  './assets/approved-02-aquamarine.png',
-  './assets/approved-03-diamond.png',
-  './assets/approved-04-emerald.png',
-  './assets/approved-05-pearl.png',
-  './assets/approved-06-ruby.png',
-  './assets/approved-07-peridot.png',
-  './assets/approved-08-sapphire.png',
-  './assets/approved-09-opal.png',
-  './assets/approved-10-topaz.png',
-  './assets/approved-11-turquoise.png',
-  './assets/approved-12-final-ring.png',
-  './assets/original-00-garnet.png',
-  './assets/original-01-amethyst.png',
-  './assets/original-02-aquamarine.png',
-  './assets/original-03-diamond.png',
-  './assets/original-04-emerald.png',
-  './assets/original-05-pearl.png',
-  './assets/original-06-ruby.png',
-  './assets/original-07-peridot.png',
-  './assets/original-08-sapphire.png',
-  './assets/original-09-opal.png',
-  './assets/original-10-topaz.png',
-  './assets/original-11-turquoise.png',
-  './assets/original-12-final-ring.png',
-  './assets/final-ring-v42-source.png',
-  './assets/final-ring-v42-asset-preview.png',
-  './assets/turquoise-v41-source.png',
-  './assets/topaz-v40-source.png',
-  './assets/opal-v39-source.png',
-  './assets/sapphire-v38-source.png',
-  './assets/peridot-v37-source.png',
-  './assets/ruby-v36-source.png',
-  './assets/pearl-v35-source.png',
-  './assets/emerald-v34-source.png',
-  './assets/diamond-v33-source.png',
-  './assets/aquamarine-v32-source.png',
-  './assets/amethyst-v31-source.png',
-  './assets/garnet-v30-source.png',
-  './assets/gem-sheet-v29-source.png',
-  './assets/final-ring-v29-source.png',
-  './assets/gem-sheet-v28-source.png',
-  './assets/final-ring-v28-source.png',
-  './assets/final-ring-v27-source.png',
-  './assets/gem-sheet-v26-trimmed.png',
-  './assets/gem-sheet-v25.png',
-  './assets/uploaded-gem-sheet-v19.png',
-  './assets/gem-assets/00-garnet.png',
-  './assets/gem-assets/01-amethyst.png',
-  './assets/gem-assets/02-aquamarine.png',
-  './assets/gem-assets/03-diamond.png',
-  './assets/gem-assets/04-emerald.png',
-  './assets/gem-assets/05-pearl.png',
-  './assets/gem-assets/06-ruby.png',
-  './assets/gem-assets/07-peridot.png',
-  './assets/gem-assets/08-sapphire.png',
-  './assets/gem-assets/09-opal.png',
-  './assets/gem-assets/10-topaz.png',
-  './assets/gem-assets/11-turquoise.png',
+// g-Lab Gem Game v85 — final flower set with reliable update behavior
+const CACHE_NAME = 'g-lab-gem-game-v85-final-flowers';
+const ASSETS = [
+  './', './index.html', './style.css', './app.js?v=85', './manifest.webmanifest',
+  './assets/outer-bg-art-nouveau.png', './assets/g-lab-logo.jpg',
+  './assets/gem-assets/00-garnet.png', './assets/gem-assets/01-amethyst.png',
+  './assets/gem-assets/02-aquamarine.png', './assets/gem-assets/03-diamond.png',
+  './assets/gem-assets/04-emerald.png', './assets/gem-assets/05-pearl.png',
+  './assets/gem-assets/06-ruby.png', './assets/gem-assets/07-peridot.png',
+  './assets/gem-assets/08-sapphire.png', './assets/gem-assets/09-opal.png',
+  './assets/gem-assets/10-topaz.png', './assets/gem-assets/11-turquoise.png',
   './assets/gem-assets/12-final-ring.png',
-  './assets/flower-assets/ume.png',
-  './assets/flower-assets/shakuyaku.png',
-  './assets/flower-assets/kiku.png',
-  './assets/flower-assets/botan.png', './app.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png'];
+  './assets/flower-assets/ume.png?v=85',
+  './assets/flower-assets/shakuyaku.png?v=85',
+  './assets/flower-assets/kiku.png?v=85',
+  './assets/flower-assets/botan.png?v=85',
+  './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png'
+];
+
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
+
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
+      .then(() => self.clients.claim())
+  );
 });
+
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+  const needsFreshCopy =
+    url.pathname.endsWith('/') ||
+    url.pathname.endsWith('/index.html') ||
+    url.pathname.endsWith('/app.js') ||
+    url.pathname.includes('/assets/flower-assets/');
+
+  if (needsFreshCopy) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request)));
 });

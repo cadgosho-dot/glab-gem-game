@@ -1,4 +1,4 @@
-// g-Lab Gem Game v84 — final hard-mode flowers: ume, shakuyaku, kiku, botan
+// g-Lab Gem Game v85 — final flowers with compatibility assets and cache-busting
 (() => {
   'use strict';
 
@@ -71,10 +71,10 @@
   // 梅 uses the Aquamarine size level and is 12% smaller than its prior size.
   // 芍薬 = Diamond, 菊 = Emerald, 牡丹 = Pearl.
   const flowers = [
-    { name:'梅',   sizeLevel:2, scale:0.88, seed:'#d78b9d', seedDark:'#754251', petal:'#fff0f5', src:'assets/flower-assets/ume.png' },
-    { name:'芍薬', sizeLevel:3, scale:1,    seed:'#d9b8c7', seedDark:'#7f5564', petal:'#fff7fb', src:'assets/flower-assets/shakuyaku.png' },
-    { name:'菊',   sizeLevel:4, scale:1,    seed:'#d6a426', seedDark:'#74520d', petal:'#ffd75a', src:'assets/flower-assets/kiku.png' },
-    { name:'牡丹', sizeLevel:5, scale:1,    seed:'#8c2633', seedDark:'#420711', petal:'#e0202a', src:'assets/flower-assets/botan.png' }
+    { name:'梅',   sizeLevel:2, scale:0.88, seed:'#d78b9d', seedDark:'#754251', petal:'#fff0f5', src:'assets/flower-assets/ume.png?v=85' },
+    { name:'芍薬', sizeLevel:3, scale:1,    seed:'#d9b8c7', seedDark:'#7f5564', petal:'#fff7fb', src:'assets/flower-assets/shakuyaku.png?v=85' },
+    { name:'菊',   sizeLevel:4, scale:1,    seed:'#d6a426', seedDark:'#74520d', petal:'#ffd75a', src:'assets/flower-assets/kiku.png?v=85' },
+    { name:'牡丹', sizeLevel:5, scale:1,    seed:'#8c2633', seedDark:'#420711', petal:'#e0202a', src:'assets/flower-assets/botan.png?v=85' }
   ];
 
   const flowerImages = flowers.map(flower => {
