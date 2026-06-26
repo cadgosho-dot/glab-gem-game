@@ -1,4 +1,4 @@
-// g-Lab Gem Game v83 — 藤の花を芍薬画像に差し替え
+// g-Lab Gem Game v84 — final hard-mode flowers: ume, shakuyaku, kiku, botan
 (() => {
   'use strict';
 
@@ -67,14 +67,14 @@
 
 
   // Hard mode only: flowers fall as seeds, bloom after their first landing, and never merge.
-  // Flower sizes are tied to the requested gem levels.
-  // 梅 uses the Aquamarine level but is reduced by 12% from its prior size.
+  // Final flower set: 梅 / 芍薬 / 菊 / 牡丹.  They appear only in hard mode.
+  // 梅 uses the Aquamarine size level and is 12% smaller than its prior size.
   // 芍薬 = Diamond, 菊 = Emerald, 牡丹 = Pearl.
   const flowers = [
-    { name:'梅', sizeLevel:2, scale:0.88, seed:'#d78b9d', seedDark:'#754251', petal:'#fff0f5', src:'assets/flower-assets/marguerite.png' },
-    { name:'芍薬', sizeLevel:3, scale:1, seed:'#d9b8c7', seedDark:'#7f5564', petal:'#fff7fb', src:'assets/flower-assets/gerbera.png' },
-    { name:'菊', sizeLevel:4, scale:1, seed:'#d6a426', seedDark:'#74520d', petal:'#ffd75a', src:'assets/flower-assets/rose.png' },
-    { name:'牡丹', sizeLevel:5, scale:1, seed:'#8c2633', seedDark:'#420711', petal:'#e0202a', src:'assets/flower-assets/lily.png' }
+    { name:'梅',   sizeLevel:2, scale:0.88, seed:'#d78b9d', seedDark:'#754251', petal:'#fff0f5', src:'assets/flower-assets/ume.png' },
+    { name:'芍薬', sizeLevel:3, scale:1,    seed:'#d9b8c7', seedDark:'#7f5564', petal:'#fff7fb', src:'assets/flower-assets/shakuyaku.png' },
+    { name:'菊',   sizeLevel:4, scale:1,    seed:'#d6a426', seedDark:'#74520d', petal:'#ffd75a', src:'assets/flower-assets/kiku.png' },
+    { name:'牡丹', sizeLevel:5, scale:1,    seed:'#8c2633', seedDark:'#420711', petal:'#e0202a', src:'assets/flower-assets/botan.png' }
   ];
 
   const flowerImages = flowers.map(flower => {

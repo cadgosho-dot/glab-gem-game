@@ -1,5 +1,5 @@
-// g-Lab Gem Game v83 — peony image replaces wisteria slot
-const CACHE_NAME = 'g-lab-gem-game-v83-peony-flower-update';
+// g-Lab Gem Game v84 — final flower set: ume, shakuyaku, kiku, botan
+const CACHE_NAME = 'g-lab-gem-game-v84-final-flowers';
 const ASSETS = ['./', './index.html', './style.css',
   './assets/outer-bg-art-nouveau.png',
   './assets/g-lab-logo.jpg',
@@ -66,10 +66,10 @@ const ASSETS = ['./', './index.html', './style.css',
   './assets/gem-assets/10-topaz.png',
   './assets/gem-assets/11-turquoise.png',
   './assets/gem-assets/12-final-ring.png',
-  './assets/flower-assets/marguerite.png',
-  './assets/flower-assets/gerbera.png',
-  './assets/flower-assets/rose.png',
-  './assets/flower-assets/lily.png', './app.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png'];
+  './assets/flower-assets/ume.png',
+  './assets/flower-assets/shakuyaku.png',
+  './assets/flower-assets/kiku.png',
+  './assets/flower-assets/botan.png', './app.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
