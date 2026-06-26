@@ -1,4 +1,4 @@
-// g-Lab Gem Game v81 — ume flower reduced by 12%
+// g-Lab Gem Game v82 — combo scoring retained without combo text display
 (() => {
   'use strict';
 
@@ -93,7 +93,6 @@
     balls: [],
     particles: [],
     fireworks: [],
-    floatingTexts: [],
     score: 0,
     comboCount: 0,
     comboLastAt: 0,
@@ -706,7 +705,6 @@
     state.balls = [];
     state.particles = [];
     state.fireworks = [];
-    state.floatingTexts = [];
     state.score = 0;
     state.comboCount = 0;
     state.comboLastAt = 0;
@@ -751,22 +749,6 @@
     };
   }
 
-  function spawnFloatingText(x, y, text, options = {}) {
-    state.floatingTexts.push({
-      x,
-      y,
-      text,
-      vx: options.vx ?? (Math.random() - 0.5) * 16,
-      vy: options.vy ?? -42,
-      life: options.life ?? 1.05,
-      maxLife: options.life ?? 1.05,
-      size: options.size ?? 18,
-      color: options.color ?? '#9d6b20',
-      stroke: options.stroke ?? 'rgba(255,255,255,.92)',
-      weight: options.weight ?? 900
-    });
-  }
-
   function mergeBalls(a, b, now = performance.now()) {
     if (a.merging || b.merging || a.level !== b.level || a.level >= gems.length - 1) return false;
     a.merging = b.merging = true;
@@ -785,15 +767,6 @@
     updateBest();
 
     spawnParticles(nx, ny, gems[nextLevel].accent, 8 + Math.min(nextLevel * 2, 22));
-    if (combo.count >= 2) {
-      const multiplierText = combo.multiplier.toFixed(combo.multiplier % 1 ? 1 : 0);
-      spawnFloatingText(nx, ny - mergedRadius * 0.45, `${combo.count} COMBO ×${multiplierText}`, {
-        color: combo.count >= 4 ? '#b06205' : '#9d6b20',
-        size: combo.count >= 4 ? 22 : 19,
-        life: 1.1,
-        vy: -48
-      });
-    }
     if (nextLevel === gems.length - 1) {
       launchCelebrationFireworks();
       setTimeout(() => spawnFireworkBurst(state.w * 0.18, state.h * 0.20, 44, '#ffd978'), 120);
@@ -814,13 +787,6 @@
     }
     state.particles = state.particles.filter(p => p.life > 0);
 
-    for (const label of state.floatingTexts) {
-      label.x += label.vx * dt;
-      label.y += label.vy * dt;
-      label.vy -= 10 * dt;
-      label.life -= dt;
-    }
-    state.floatingTexts = state.floatingTexts.filter(label => label.life > 0);
   }
 
   function findMergePair(now) {
@@ -1884,30 +1850,12 @@
     }
   }
 
-  function drawFloatingTexts() {
-    for (const label of state.floatingTexts) {
-      const alpha = Math.max(0, Math.min(1, label.life / label.maxLife));
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.font = `${label.weight} ${Math.round(label.size)}px system-ui, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.lineWidth = Math.max(2.1, label.size * 0.14);
-      ctx.strokeStyle = label.stroke;
-      ctx.fillStyle = label.color;
-      ctx.strokeText(label.text, label.x, label.y);
-      ctx.fillText(label.text, label.x, label.y);
-      ctx.restore();
-    }
-  }
-
   function render() {
     drawBackground();
     drawFireworks();
     const sorted = [...state.balls].sort((a,b)=>a.r-b.r);
     for (const b of sorted) drawBall(b);
     drawParticles();
-    drawFloatingTexts();
     drawPreview();
   }
 

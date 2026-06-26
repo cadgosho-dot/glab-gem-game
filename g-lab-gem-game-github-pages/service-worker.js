@@ -1,5 +1,5 @@
-// g-Lab Gem Game v72 — immediate ceiling-contact game over
-const CACHE_NAME = 'g-lab-gem-game-v72-ceiling-contact-gameover';
+// g-Lab Gem Game v82 — combo display removed
+const CACHE_NAME = 'g-lab-gem-game-v82-no-combo-display';
 const ASSETS = ['./', './index.html', './style.css',
   './assets/outer-bg-art-nouveau.png',
   './assets/g-lab-logo.jpg',
