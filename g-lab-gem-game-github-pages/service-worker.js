@@ -1,7 +1,7 @@
-// g-Lab Gem Game v89 — complete flower and background sync
-const CACHE_NAME = 'g-lab-gem-game-v89-complete-assets';
+// g-Lab Gem Game v90 — outer background updated
+const CACHE_NAME = 'g-lab-gem-game-v90-outer-background';
 const ASSETS = [
-  './', './index.html', './style.css', './app.js?v=89', './manifest.webmanifest?v=89',
+  './', './index.html', './style.css', './app.js?v=90', './manifest.webmanifest?v=90',
   './assets/outer-bg-art-nouveau.png', './assets/board-bg-v89.png?v=89', './assets/g-lab-logo.jpg',
   './assets/gem-assets/00-garnet.png', './assets/gem-assets/01-amethyst.png',
   './assets/gem-assets/02-aquamarine.png', './assets/gem-assets/03-diamond.png',
