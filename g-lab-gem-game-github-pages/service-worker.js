@@ -1,8 +1,8 @@
-// g-Lab Gem Game v85 — final flower set with reliable update behavior
-const CACHE_NAME = 'g-lab-gem-game-v85-final-flowers';
+// g-Lab Gem Game v88 — operation board background updated
+const CACHE_NAME = 'g-lab-gem-game-v88-board-bg';
 const ASSETS = [
-  './', './index.html', './style.css', './app.js?v=85', './manifest.webmanifest',
-  './assets/outer-bg-art-nouveau.png', './assets/g-lab-logo.jpg',
+  './', './index.html', './style.css', './app.js?v=88', './manifest.webmanifest?v=88',
+  './assets/outer-bg-art-nouveau.png', './assets/board-bg-v88.png', './assets/g-lab-logo.jpg',
   './assets/gem-assets/00-garnet.png', './assets/gem-assets/01-amethyst.png',
   './assets/gem-assets/02-aquamarine.png', './assets/gem-assets/03-diamond.png',
   './assets/gem-assets/04-emerald.png', './assets/gem-assets/05-pearl.png',
@@ -10,10 +10,11 @@ const ASSETS = [
   './assets/gem-assets/08-sapphire.png', './assets/gem-assets/09-opal.png',
   './assets/gem-assets/10-topaz.png', './assets/gem-assets/11-turquoise.png',
   './assets/gem-assets/12-final-ring.png',
-  './assets/flower-assets/ume.png?v=85',
-  './assets/flower-assets/shakuyaku.png?v=85',
-  './assets/flower-assets/kiku.png?v=85',
-  './assets/flower-assets/botan.png?v=85',
+  './assets/flower-assets/ume.png?v=86',
+  './assets/flower-assets/shakuyaku.png?v=86',
+  './assets/flower-assets/kiku.png?v=86',
+  './assets/flower-assets/botan.png?v=86',
+  './assets/flower-assets/botan-variegated.png?v=86',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png'
 ];
 

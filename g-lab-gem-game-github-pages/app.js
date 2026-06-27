@@ -1,4 +1,4 @@
-// g-Lab Gem Game v85 — final flowers with compatibility assets and cache-busting
+// g-Lab Gem Game v88 — operation board background updated
 (() => {
   'use strict';
 
@@ -26,6 +26,11 @@
   logoBg.src = 'assets/g-lab-logo.jpg';
   let logoBgReady = false;
   logoBg.onload = () => { logoBgReady = true; };
+
+  const boardBg = new Image();
+  boardBg.src = 'assets/board-bg-v88.png';
+  let boardBgReady = false;
+  boardBg.onload = () => { boardBgReady = true; };
 
   const gems = [
     { name:'ガーネット', short:'Ga', color:'#8e183a', dark:'#2b0615', shine:'#ffd4df', accent:'#e34369', value:1, radius:14, density:1.30, cut:'roseRound', sides:12, transparency:.64 },
@@ -67,14 +72,15 @@
 
 
   // Hard mode only: flowers fall as seeds, bloom after their first landing, and never merge.
-  // Final flower set: 梅 / 芍薬 / 菊 / 牡丹.  They appear only in hard mode.
-  // 梅 uses the Aquamarine size level and is 12% smaller than its prior size.
-  // 芍薬 = Diamond, 菊 = Emerald, 牡丹 = Pearl.
+  // Current flower set: 梅 / 芍薬 / 菊 / 牡丹 / 斑入り牡丹. They appear only in hard mode.
+  // 梅 uses the Aquamarine size level and remains 12% smaller.
+  // 芍薬 = Diamond size, 菊 = Emerald size, 牡丹 = Pearl size, 斑入り牡丹 = 牡丹と同サイズ.
   const flowers = [
-    { name:'梅',   sizeLevel:2, scale:0.88, seed:'#d78b9d', seedDark:'#754251', petal:'#fff0f5', src:'assets/flower-assets/ume.png?v=85' },
-    { name:'芍薬', sizeLevel:3, scale:1,    seed:'#d9b8c7', seedDark:'#7f5564', petal:'#fff7fb', src:'assets/flower-assets/shakuyaku.png?v=85' },
-    { name:'菊',   sizeLevel:4, scale:1,    seed:'#d6a426', seedDark:'#74520d', petal:'#ffd75a', src:'assets/flower-assets/kiku.png?v=85' },
-    { name:'牡丹', sizeLevel:5, scale:1,    seed:'#8c2633', seedDark:'#420711', petal:'#e0202a', src:'assets/flower-assets/botan.png?v=85' }
+    { name:'梅',         sizeLevel:2, scale:0.88, seed:'#d7a8ad', seedDark:'#7a5054', petal:'#fff3f2', src:'assets/flower-assets/ume.png?v=86' },
+    { name:'芍薬',       sizeLevel:3, scale:1,    seed:'#d9c7b0', seedDark:'#8f7a60', petal:'#fffaf0', src:'assets/flower-assets/shakuyaku.png?v=86' },
+    { name:'菊',         sizeLevel:4, scale:1,    seed:'#d6a426', seedDark:'#74520d', petal:'#ffe08a', src:'assets/flower-assets/kiku.png?v=86' },
+    { name:'牡丹',       sizeLevel:5, scale:1,    seed:'#9d2b39', seedDark:'#4a0f18', petal:'#e34d57', src:'assets/flower-assets/botan.png?v=86' },
+    { name:'斑入り牡丹', sizeLevel:5, scale:1,    seed:'#d06374', seedDark:'#6a1e2f', petal:'#f36d86', src:'assets/flower-assets/botan-variegated.png?v=86' }
   ];
 
   const flowerImages = flowers.map(flower => {
@@ -154,7 +160,7 @@
       gameOverGraceMs: 3500
     },
     hard: {
-      // Hard: identical to normal except that rare permanent flower obstacles can appear.
+      // Hard: identical to normal except that rare permanent flower obstacles can appear (5花種).
       bag: [0,0,0,0,0,1,1,1,2,2],
       sizeScale: 1,
       overlapFactor: 0.84,
@@ -1686,9 +1692,27 @@
   function drawBackground() {
     ctx.clearRect(0, 0, state.w, state.h);
 
-    // Operation screen background: clean white with the g-Lab. logo centered.
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, state.w, state.h);
+    // Operation screen background: user-provided floral artwork with the g-Lab. logo centered.
+    if (boardBgReady && boardBg.naturalWidth) {
+      const imgRatio = boardBg.naturalWidth / boardBg.naturalHeight;
+      const canvasRatio = state.w / state.h;
+      let drawW, drawH, drawX, drawY;
+      if (imgRatio > canvasRatio) {
+        drawH = state.h;
+        drawW = drawH * imgRatio;
+        drawX = (state.w - drawW) / 2;
+        drawY = 0;
+      } else {
+        drawW = state.w;
+        drawH = drawW / imgRatio;
+        drawX = 0;
+        drawY = (state.h - drawH) / 2;
+      }
+      ctx.drawImage(boardBg, drawX, drawY, drawW, drawH);
+    } else {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, state.w, state.h);
+    }
 
     if (state.fireworks.length) {
       ctx.save();
@@ -1711,7 +1735,7 @@
       const y = (state.h - h) / 2;
 
       ctx.save();
-      ctx.globalAlpha = 0.15;
+      ctx.globalAlpha = 0.16;
       ctx.drawImage(logoBg, x, y, w, h);
       ctx.restore();
     }
