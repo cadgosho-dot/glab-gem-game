@@ -1,0 +1,17 @@
+v89 flower verification
+
+app.js must refer only to these files:
+assets/flower-assets/ume-v89.png?v=89
+assets/flower-assets/shakuyaku-v89.png?v=89
+assets/flower-assets/kiku-v89.png?v=89
+assets/flower-assets/botan-v89.png?v=89
+assets/flower-assets/botan-variegated-v89.png?v=89
+
+Flower order for difficult mode:
+1. 梅
+2. 芍薬
+3. 菊
+4. 牡丹
+5. 斑入り牡丹
+
+Copy the entire contents of the GitHub update package directly into g-lab-gem-game-github-pages and choose Replace All.

@@ -1,4 +1,4 @@
-// g-Lab Gem Game v88 — operation board background updated
+// g-Lab Gem Game v89 — complete flower asset sync
 (() => {
   'use strict';
 
@@ -28,7 +28,7 @@
   logoBg.onload = () => { logoBgReady = true; };
 
   const boardBg = new Image();
-  boardBg.src = 'assets/board-bg-v88.png';
+  boardBg.src = 'assets/board-bg-v89.png?v=89';
   let boardBgReady = false;
   boardBg.onload = () => { boardBgReady = true; };
 
@@ -76,11 +76,11 @@
   // 梅 uses the Aquamarine size level and remains 12% smaller.
   // 芍薬 = Diamond size, 菊 = Emerald size, 牡丹 = Pearl size, 斑入り牡丹 = 牡丹と同サイズ.
   const flowers = [
-    { name:'梅',         sizeLevel:2, scale:0.88, seed:'#d7a8ad', seedDark:'#7a5054', petal:'#fff3f2', src:'assets/flower-assets/ume.png?v=86' },
-    { name:'芍薬',       sizeLevel:3, scale:1,    seed:'#d9c7b0', seedDark:'#8f7a60', petal:'#fffaf0', src:'assets/flower-assets/shakuyaku.png?v=86' },
-    { name:'菊',         sizeLevel:4, scale:1,    seed:'#d6a426', seedDark:'#74520d', petal:'#ffe08a', src:'assets/flower-assets/kiku.png?v=86' },
-    { name:'牡丹',       sizeLevel:5, scale:1,    seed:'#9d2b39', seedDark:'#4a0f18', petal:'#e34d57', src:'assets/flower-assets/botan.png?v=86' },
-    { name:'斑入り牡丹', sizeLevel:5, scale:1,    seed:'#d06374', seedDark:'#6a1e2f', petal:'#f36d86', src:'assets/flower-assets/botan-variegated.png?v=86' }
+    { name:'梅',         sizeLevel:2, scale:0.88, seed:'#d7a8ad', seedDark:'#7a5054', petal:'#fff3f2', src:'assets/flower-assets/ume-v89.png?v=89' },
+    { name:'芍薬',       sizeLevel:3, scale:1,    seed:'#d9c7b0', seedDark:'#8f7a60', petal:'#fffaf0', src:'assets/flower-assets/shakuyaku-v89.png?v=89' },
+    { name:'菊',         sizeLevel:4, scale:1,    seed:'#d6a426', seedDark:'#74520d', petal:'#ffe08a', src:'assets/flower-assets/kiku-v89.png?v=89' },
+    { name:'牡丹',       sizeLevel:5, scale:1,    seed:'#9d2b39', seedDark:'#4a0f18', petal:'#e34d57', src:'assets/flower-assets/botan-v89.png?v=89' },
+    { name:'斑入り牡丹', sizeLevel:5, scale:1,    seed:'#d06374', seedDark:'#6a1e2f', petal:'#f36d86', src:'assets/flower-assets/botan-variegated-v89.png?v=89' }
   ];
 
   const flowerImages = flowers.map(flower => {
