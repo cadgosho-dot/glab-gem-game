@@ -1,4 +1,4 @@
-// g-Lab Gem Game v89 — complete flower asset sync
+// g-Lab Gem Game v92 — easy mode gems reduced by an additional 7%
 (() => {
   'use strict';
 
@@ -148,7 +148,7 @@
       // Easy: Garnet, Amethyst and Aquamarine do not appear.
       // Drops begin at Diamond and remain weighted toward the smaller eligible gems.
       bag: [3,3,3,3,4,4,5],
-      sizeScale: 1,
+      sizeScale: 0.8835,
       overlapFactor: 0.84,
       gameOverGraceMs: 3500
     },
