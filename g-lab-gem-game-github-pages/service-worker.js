@@ -1,7 +1,7 @@
-// g-Lab Gem Game v92 — easy mode gems reduced by an additional 7%
-const CACHE_NAME = 'g-lab-gem-game-v92-easy-gems-additional-7-percent';
+// g-Lab Gem Game v99 — difficulty controls restored below the game board
+const CACHE_NAME = 'g-lab-gem-game-v99-difficulty-controls-restored';
 const ASSETS = [
-  './', './index.html', './style.css', './app.js?v=92', './manifest.webmanifest?v=92',
+  './', './index.html', './style.css', './app.js?v=99', './manifest.webmanifest?v=99',
   './assets/outer-bg-art-nouveau.png', './assets/board-bg-v89.png?v=89', './assets/g-lab-logo.jpg',
   './assets/gem-assets/00-garnet.png', './assets/gem-assets/01-amethyst.png',
   './assets/gem-assets/02-aquamarine.png', './assets/gem-assets/03-diamond.png',
