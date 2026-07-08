@@ -1,4 +1,4 @@
-// g-Lab Gem Game v101 — v92 state with final ring replaced
+// g-Lab Gem Game v103 — flashier final-ring fireworks in white and gold
 (() => {
   'use strict';
 
@@ -613,64 +613,99 @@
   }
 
 
-  function spawnParticles(x, y, color, count = 10) {
+  function spawnParticles(x, y, color, count = 10, style = 'default') {
+    const whiteGoldPalette = ['#ffffff', '#fff9eb', '#ffeeb1', '#f3d36b'];
     for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2;
-      const speed = 70 + Math.random() * 220;
+      const isJapanese = style === 'japanese';
+      const speed = isJapanese ? 48 + Math.random() * 168 : 70 + Math.random() * 220;
+      const motifRoll = Math.random();
+      const motif = !isJapanese
+        ? 'spark'
+        : motifRoll < 0.66
+          ? 'petal'
+          : motifRoll < 0.90
+            ? 'kirikane'
+            : 'plum';
       state.particles.push({
         x, y,
         vx: Math.cos(a) * speed,
-        vy: Math.sin(a) * speed - 60,
-        life: 0.45 + Math.random() * 0.35,
-        maxLife: 0.7,
-        size: 2 + Math.random() * 4,
-        color
+        vy: Math.sin(a) * speed - (isJapanese ? 42 : 60),
+        life: isJapanese ? 0.72 + Math.random() * 0.38 : 0.45 + Math.random() * 0.35,
+        maxLife: isJapanese ? 1.0 : 0.7,
+        size: isJapanese ? 3.6 + Math.random() * 4.8 : 2 + Math.random() * 4,
+        color: isJapanese ? whiteGoldPalette[Math.floor(Math.random() * whiteGoldPalette.length)] : color,
+        style,
+        motif,
+        rot: Math.random() * Math.PI * 2,
+        spin: (Math.random() - 0.5) * (isJapanese ? 5.6 : 4.5),
+        stretch: isJapanese ? 1.08 + Math.random() * 0.95 : 0.9 + Math.random() * 0.35,
+        glow: isJapanese ? 0.52 + Math.random() * 0.45 : 0.22 + Math.random() * 0.2
       });
     }
   }
 
 
   function launchCelebrationFireworks() {
-    const colors = ['#ffd978', '#ff7ac8', '#7fd6ff', '#8bff9e', '#ffffff', '#ff8a6e'];
-    const bursts = [
-      [state.w * 0.22, state.h * 0.22, 48],
-      [state.w * 0.50, state.h * 0.16, 62],
-      [state.w * 0.78, state.h * 0.23, 50],
-      [state.w * 0.36, state.h * 0.30, 40],
-      [state.w * 0.66, state.h * 0.31, 40]
+    const burstPlan = [
+      [state.w * 0.22, state.h * 0.22, 72, '#f3d36b', { motifs: ['kirikane', 'spark'], lifeMin: 1.5, lifeMax: 2.4, sizeMin: 2.2, sizeMax: 5.6, glowBase: 18, glowRange: 20 }],
+      [state.w * 0.50, state.h * 0.16, 98, '#ffffff', { motifs: ['petal', 'petal', 'kirikane', 'plum'], lifeMin: 2.0, lifeMax: 3.0, sizeMin: 3.8, sizeMax: 8.2, speedMin: 72, speedMax: 245, glowBase: 15, glowRange: 20 }],
+      [state.w * 0.78, state.h * 0.23, 72, '#f7dfa0', { motifs: ['kirikane', 'spark', 'plum'], lifeMin: 1.5, lifeMax: 2.4, sizeMin: 2.2, sizeMax: 5.6, glowBase: 18, glowRange: 20 }],
+      [state.w * 0.36, state.h * 0.30, 60, '#fff9eb', { motifs: ['petal', 'plum'], lifeMin: 1.6, lifeMax: 2.6, sizeMin: 3.0, sizeMax: 6.8, glowBase: 15, glowRange: 18 }],
+      [state.w * 0.66, state.h * 0.31, 60, '#ffeeb1', { motifs: ['petal', 'kirikane'], lifeMin: 1.6, lifeMax: 2.6, sizeMin: 3.0, sizeMax: 6.8, glowBase: 15, glowRange: 18 }]
     ];
-    for (const [x, y, count] of bursts) {
-      spawnFireworkBurst(x, y, count, colors[Math.floor(Math.random() * colors.length)]);
+    for (const [x, y, count, color, options] of burstPlan) {
+      spawnFireworkBurst(x, y, count, color, options);
     }
   }
 
-  function spawnFireworkBurst(x, y, count = 48, mainColor = '#ffd978') {
-    const colorPool = [mainColor, '#ffffff', '#ffd978', '#7fd6ff', '#ff7ac8', '#8bff9e'];
+  function spawnFireworkBurst(x, y, count = 48, mainColor = '#f3d36b', options = {}) {
+    const colorPool = options.palette || [mainColor, '#ffffff', '#fff9eb', '#ffeeb1', '#f3d36b'];
+    const motifs = options.motifs || [options.motif || 'spark'];
+    const speedMin = options.speedMin ?? 60;
+    const speedMax = options.speedMax ?? 260;
+    const lifeMin = options.lifeMin ?? 1.0;
+    const lifeMax = options.lifeMax ?? 1.95;
+    const sizeMin = options.sizeMin ?? 1.8;
+    const sizeMax = options.sizeMax ?? 5.6;
+    const glowBase = options.glowBase ?? 12;
+    const glowRange = options.glowRange ?? 16;
     for (let i = 0; i < count; i++) {
       const a = (Math.PI * 2 * i) / count + Math.random() * 0.08;
-      const speed = 60 + Math.random() * 260;
+      const speed = speedMin + Math.random() * (speedMax - speedMin);
       const color = colorPool[Math.floor(Math.random() * colorPool.length)];
+      const motif = motifs[Math.floor(Math.random() * motifs.length)];
+      const size = sizeMin + Math.random() * (sizeMax - sizeMin);
+      const life = lifeMin + Math.random() * Math.max(0.05, lifeMax - lifeMin);
       state.fireworks.push({
         x, y,
         vx: Math.cos(a) * speed,
         vy: Math.sin(a) * speed,
-        life: 1.0 + Math.random() * 0.55,
-        maxLife: 1.4 + Math.random() * 0.25,
-        size: 1.8 + Math.random() * 3.8,
+        life,
+        maxLife: life,
+        size,
         color,
-        glow: 12 + Math.random() * 16,
-        twinkle: Math.random() * Math.PI * 2
+        glow: glowBase + Math.random() * glowRange,
+        twinkle: Math.random() * Math.PI * 2,
+        motif,
+        rot: Math.random() * Math.PI * 2,
+        spin: (Math.random() - 0.5) * (motif === 'petal' ? 4.4 : 2.8),
+        stretch: motif === 'petal' ? 1.16 + Math.random() * 0.98 : 1,
+        shower: false
       });
     }
   }
 
   function stepFireworks(dt) {
     for (const f of state.fireworks) {
-      f.vy += 28 * dt;
+      const isPetal = f.motif === 'petal';
+      if (isPetal) f.vx += Math.sin((f.twinkle || 0) + (f.maxLife - f.life) * 3.4) * 9 * dt;
+      f.vy += (isPetal ? 46 : 28) * dt;
       f.x += f.vx * dt;
       f.y += f.vy * dt;
-      f.vx *= 0.992;
-      f.vy *= 0.992;
+      f.vx *= isPetal ? 0.994 : 0.992;
+      f.vy *= isPetal ? 0.994 : 0.992;
+      f.rot = (f.rot || 0) + (f.spin || 0) * dt;
       f.life -= dt;
     }
     state.fireworks = state.fireworks.filter(f => f.life > 0);
@@ -772,12 +807,15 @@
     state.score += comboScore;
     updateBest();
 
-    spawnParticles(nx, ny, gems[nextLevel].accent, 8 + Math.min(nextLevel * 2, 22));
+    spawnParticles(nx, ny, gems[nextLevel].accent, 12 + Math.min(nextLevel * 2, 24), 'japanese');
     if (nextLevel === gems.length - 1) {
       launchCelebrationFireworks();
-      setTimeout(() => spawnFireworkBurst(state.w * 0.18, state.h * 0.20, 44, '#ffd978'), 120);
-      setTimeout(() => spawnFireworkBurst(state.w * 0.82, state.h * 0.20, 44, '#ff7ac8'), 220);
-      setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.14, 58, '#7fd6ff'), 340);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.18, state.h * 0.20, 72, '#f3d36b', { motifs: ['kirikane', 'spark', 'plum'], lifeMin: 1.5, lifeMax: 2.4, sizeMin: 2.2, sizeMax: 5.8, glowBase: 18, glowRange: 20 }), 100);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.82, state.h * 0.20, 72, '#ffffff', { motifs: ['petal', 'kirikane', 'plum'], lifeMin: 1.7, lifeMax: 2.6, sizeMin: 3.0, sizeMax: 7.0, glowBase: 16, glowRange: 20 }), 220);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.14, 98, '#ffeeb1', { motifs: ['petal', 'petal', 'kirikane', 'plum'], lifeMin: 2.0, lifeMax: 3.0, sizeMin: 3.8, sizeMax: 8.2, speedMin: 70, speedMax: 240, glowBase: 17, glowRange: 20 }), 340);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.30, state.h * 0.16, 66, '#fff9eb', { motifs: ['petal', 'kirikane'], lifeMin: 1.6, lifeMax: 2.5, sizeMin: 3.0, sizeMax: 6.8, glowBase: 16, glowRange: 18 }), 520);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.70, state.h * 0.16, 66, '#f3d36b', { motifs: ['kirikane', 'spark', 'plum'], lifeMin: 1.6, lifeMax: 2.5, sizeMin: 2.4, sizeMax: 6.0, glowBase: 18, glowRange: 18 }), 660);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.10, 112, '#ffffff', { motifs: ['petal', 'petal', 'kirikane', 'plum'], lifeMin: 2.2, lifeMax: 3.2, sizeMin: 4.0, sizeMax: 8.8, speedMin: 72, speedMax: 248, glowBase: 18, glowRange: 22 }), 820);
     }
     playTone('merge', nextLevel);
     updateHud();
@@ -786,9 +824,13 @@
 
   function stepParticles(dt) {
     for (const p of state.particles) {
-      p.vy += 760 * dt;
+      const isJapanese = p.style === 'japanese';
+      p.vy += (isJapanese ? 420 : 760) * dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
+      p.vx *= isJapanese ? 0.987 : 0.992;
+      p.vy *= isJapanese ? 0.992 : 0.996;
+      p.rot = (p.rot || 0) + (p.spin || 0) * dt;
       p.life -= dt;
     }
     state.particles = state.particles.filter(p => p.life > 0);
@@ -1820,40 +1862,165 @@
       const twinkle = 0.72 + 0.28 * Math.sin((1 - alpha) * 18 + f.twinkle);
       ctx.save();
       ctx.translate(f.x, f.y);
+      ctx.rotate(f.rot || 0);
       ctx.globalAlpha = alpha * twinkle;
 
       ctx.shadowColor = f.color;
       ctx.shadowBlur = f.glow * alpha + 2;
 
-      // glow
-      const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, f.size * 3.6);
+      const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, f.size * (f.motif === 'petal' ? 4.4 : 3.6));
       glow.addColorStop(0, f.color);
       glow.addColorStop(.24, f.color + 'cc');
       glow.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(0, 0, f.size * 2.4, 0, Math.PI * 2);
+      ctx.arc(0, 0, f.size * (f.motif === 'petal' ? 2.7 : 2.4), 0, Math.PI * 2);
       ctx.fill();
 
-      // star sparkle
-      ctx.strokeStyle = f.color;
-      ctx.lineCap = 'round';
-      ctx.lineWidth = Math.max(0.8, f.size * 0.34);
-      const len = f.size * 2.6;
-      ctx.beginPath(); ctx.moveTo(-len, 0); ctx.lineTo(len, 0); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, -len); ctx.lineTo(0, len); ctx.stroke();
-      ctx.lineWidth = Math.max(0.7, f.size * 0.18);
-      const d = len * 0.72;
-      ctx.beginPath(); ctx.moveTo(-d, -d); ctx.lineTo(d, d); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-d, d); ctx.lineTo(d, -d); ctx.stroke();
+      if (f.motif === 'petal') {
+        const size = f.size;
+        const stretch = f.stretch || 1.4;
+        ctx.scale(0.94, stretch);
+        ctx.fillStyle = f.color;
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 1.28);
+        ctx.bezierCurveTo(size * 0.96, -size * 1.08, size * 1.06, size * 0.08, 0, size * 1.06);
+        ctx.bezierCurveTo(-size * 1.06, size * 0.08, -size * 0.96, -size * 1.08, 0, -size * 1.28);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,.84)';
+        ctx.beginPath();
+        ctx.ellipse(0, -size * 0.24, size * 0.22, size * 0.52, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(212,181,87,.34)';
+        ctx.lineWidth = Math.max(0.6, size * 0.08);
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 0.72);
+        ctx.quadraticCurveTo(size * 0.08, -size * 0.06, 0, size * 0.64);
+        ctx.stroke();
+      } else if (f.motif === 'plum') {
+        const size = f.size;
+        ctx.fillStyle = f.color;
+        for (let i = 0; i < 5; i++) {
+          const a = (Math.PI * 2 * i) / 5;
+          const px = Math.cos(a) * size * 0.72;
+          const py = Math.sin(a) * size * 0.72;
+          ctx.beginPath();
+          ctx.arc(px, py, size * 0.56, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#f3d36b';
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.34, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (f.motif === 'kirikane') {
+        const size = f.size;
+        ctx.fillStyle = f.color;
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 1.28);
+        ctx.lineTo(size * 0.52, 0);
+        ctx.lineTo(0, size * 1.28);
+        ctx.lineTo(-size * 0.52, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,.84)';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = Math.max(0.8, size * 0.13);
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 0.9); ctx.lineTo(0, size * 0.9);
+        ctx.moveTo(-size * 0.38, 0); ctx.lineTo(size * 0.38, 0);
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = f.color;
+        ctx.lineCap = 'round';
+        ctx.lineWidth = Math.max(0.8, f.size * 0.34);
+        const len = f.size * 2.8;
+        ctx.beginPath(); ctx.moveTo(-len, 0); ctx.lineTo(len, 0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, -len); ctx.lineTo(0, len); ctx.stroke();
+        ctx.lineWidth = Math.max(0.7, f.size * 0.18);
+        const d = len * 0.72;
+        ctx.beginPath(); ctx.moveTo(-d, -d); ctx.lineTo(d, d); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-d, d); ctx.lineTo(d, -d); ctx.stroke();
+      }
 
       ctx.restore();
     }
   }
 
+  function drawJapaneseSparkleParticle(p, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(p.x, p.y);
+    ctx.rotate((p.rot || 0) + (1 - alpha) * 1.2);
+
+    const size = p.size;
+    const stretch = p.stretch || 1;
+    ctx.shadowBlur = size * 2.4 * (p.glow || 0.4);
+    ctx.shadowColor = p.color;
+
+    if (p.motif === 'petal') {
+      ctx.scale(0.94, stretch);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 1.24);
+      ctx.bezierCurveTo(size * 0.94, -size * 1.02, size * 1.04, size * 0.06, 0, size * 1.02);
+      ctx.bezierCurveTo(-size * 1.04, size * 0.06, -size * 0.94, -size * 1.02, 0, -size * 1.24);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.84)';
+      ctx.beginPath();
+      ctx.ellipse(0, -size * 0.22, size * 0.2, size * 0.46, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(212,181,87,.32)';
+      ctx.lineWidth = Math.max(0.6, size * 0.08);
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.7);
+      ctx.quadraticCurveTo(size * 0.08, -size * 0.05, 0, size * 0.62);
+      ctx.stroke();
+    } else if (p.motif === 'plum') {
+      ctx.fillStyle = p.color;
+      for (let i = 0; i < 5; i++) {
+        const a = (Math.PI * 2 * i) / 5;
+        const px = Math.cos(a) * size * 0.64;
+        const py = Math.sin(a) * size * 0.64;
+        ctx.beginPath();
+        ctx.arc(px, py, size * 0.52, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#f3d36b';
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.scale(0.92, stretch * 0.92);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 1.18);
+      ctx.lineTo(size * 0.68, 0);
+      ctx.lineTo(0, size * 1.18);
+      ctx.lineTo(-size * 0.68, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.78)';
+      ctx.lineWidth = Math.max(0.8, size * 0.12);
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.82);
+      ctx.lineTo(0, size * 0.82);
+      ctx.moveTo(-size * 0.46, 0);
+      ctx.lineTo(size * 0.46, 0);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
   function drawParticles() {
     for (const p of state.particles) {
       const alpha = Math.max(0, p.life / p.maxLife);
+      if (p.style === 'japanese') {
+        drawJapaneseSparkleParticle(p, alpha);
+        continue;
+      }
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.fillStyle = p.color;
