@@ -1,7 +1,7 @@
-// g-Lab Gem Game v103 — flashier final-ring fireworks in white and gold
-const CACHE_NAME = 'g-lab-gem-game-v103-flashier-final-fireworks';
+// g-Lab Gem Game v107 — final fireworks reduced in visual size
+const CACHE_NAME = 'g-lab-gem-game-v107-smaller-fireworks';
 const ASSETS = [
-  './', './index.html', './style.css', './app.js?v=103', './manifest.webmanifest?v=103',
+  './', './index.html', './style.css', './app.js?v=107', './manifest.webmanifest?v=107',
   './assets/outer-bg-art-nouveau.png', './assets/board-bg-v89.png?v=89', './assets/g-lab-logo.jpg',
   './assets/gem-assets/00-garnet.png', './assets/gem-assets/01-amethyst.png',
   './assets/gem-assets/02-aquamarine.png', './assets/gem-assets/03-diamond.png',

@@ -1,4 +1,4 @@
-// g-Lab Gem Game v103 — flashier final-ring fireworks in white and gold
+// g-Lab Gem Game v107 — final fireworks reduced in visual size
 (() => {
   'use strict';
 
@@ -241,7 +241,8 @@
     // Emerald (5th) and later keep the additional 5% reduction.
     const lateGemScale = level >= 4 ? 0.95 : 1;
     const difficultyScale = currentDifficultyOption().sizeScale || 1;
-    return Math.round(gems[level].radius * scale * easyScale * diamondAndLaterScale * lateGemScale * difficultyScale);
+    const finalRingOverlapScale = level === gems.length - 1 ? 0.88 : 1;
+    return Math.round(gems[level].radius * scale * easyScale * diamondAndLaterScale * lateGemScale * difficultyScale * finalRingOverlapScale);
   }
 
   function clampDropX(x) {
@@ -626,7 +627,7 @@
           ? 'petal'
           : motifRoll < 0.90
             ? 'kirikane'
-            : 'plum';
+            : 'kirikane';
       state.particles.push({
         x, y,
         vx: Math.cos(a) * speed,
@@ -648,11 +649,11 @@
 
   function launchCelebrationFireworks() {
     const burstPlan = [
-      [state.w * 0.22, state.h * 0.22, 72, '#f3d36b', { motifs: ['kirikane', 'spark'], lifeMin: 1.5, lifeMax: 2.4, sizeMin: 2.2, sizeMax: 5.6, glowBase: 18, glowRange: 20 }],
-      [state.w * 0.50, state.h * 0.16, 98, '#ffffff', { motifs: ['petal', 'petal', 'kirikane', 'plum'], lifeMin: 2.0, lifeMax: 3.0, sizeMin: 3.8, sizeMax: 8.2, speedMin: 72, speedMax: 245, glowBase: 15, glowRange: 20 }],
-      [state.w * 0.78, state.h * 0.23, 72, '#f7dfa0', { motifs: ['kirikane', 'spark', 'plum'], lifeMin: 1.5, lifeMax: 2.4, sizeMin: 2.2, sizeMax: 5.6, glowBase: 18, glowRange: 20 }],
-      [state.w * 0.36, state.h * 0.30, 60, '#fff9eb', { motifs: ['petal', 'plum'], lifeMin: 1.6, lifeMax: 2.6, sizeMin: 3.0, sizeMax: 6.8, glowBase: 15, glowRange: 18 }],
-      [state.w * 0.66, state.h * 0.31, 60, '#ffeeb1', { motifs: ['petal', 'kirikane'], lifeMin: 1.6, lifeMax: 2.6, sizeMin: 3.0, sizeMax: 6.8, glowBase: 15, glowRange: 18 }]
+      [state.w * 0.22, state.h * 0.22, 72, '#f3d36b', { motifs: ['kirikane', 'spark'], lifeMin: 1.5, lifeMax: 2.4, sizeMin: 1.7, sizeMax: 4.2, glowBase: 12, glowRange: 14 }],
+      [state.w * 0.50, state.h * 0.16, 98, '#ffffff', { motifs: ['kirikane', 'spark'], lifeMin: 2.0, lifeMax: 3.0, sizeMin: 2.8, sizeMax: 6.1, speedMin: 72, speedMax: 245, glowBase: 11, glowRange: 14 }],
+      [state.w * 0.78, state.h * 0.23, 72, '#f7dfa0', { motifs: ['kirikane', 'spark'], lifeMin: 1.5, lifeMax: 2.4, sizeMin: 1.7, sizeMax: 4.2, glowBase: 12, glowRange: 14 }],
+      [state.w * 0.36, state.h * 0.30, 60, '#fff9eb', { motifs: ['kirikane', 'spark'], lifeMin: 1.6, lifeMax: 2.6, sizeMin: 2.2, sizeMax: 5.0, glowBase: 11, glowRange: 13 }],
+      [state.w * 0.66, state.h * 0.31, 60, '#ffeeb1', { motifs: ['kirikane', 'spark'], lifeMin: 1.6, lifeMax: 2.6, sizeMin: 2.2, sizeMax: 5.0, glowBase: 11, glowRange: 13 }]
     ];
     for (const [x, y, count, color, options] of burstPlan) {
       spawnFireworkBurst(x, y, count, color, options);
@@ -810,12 +811,12 @@
     spawnParticles(nx, ny, gems[nextLevel].accent, 12 + Math.min(nextLevel * 2, 24), 'japanese');
     if (nextLevel === gems.length - 1) {
       launchCelebrationFireworks();
-      setTimeout(() => spawnFireworkBurst(state.w * 0.18, state.h * 0.20, 72, '#f3d36b', { motifs: ['kirikane', 'spark', 'plum'], lifeMin: 1.5, lifeMax: 2.4, sizeMin: 2.2, sizeMax: 5.8, glowBase: 18, glowRange: 20 }), 100);
-      setTimeout(() => spawnFireworkBurst(state.w * 0.82, state.h * 0.20, 72, '#ffffff', { motifs: ['petal', 'kirikane', 'plum'], lifeMin: 1.7, lifeMax: 2.6, sizeMin: 3.0, sizeMax: 7.0, glowBase: 16, glowRange: 20 }), 220);
-      setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.14, 98, '#ffeeb1', { motifs: ['petal', 'petal', 'kirikane', 'plum'], lifeMin: 2.0, lifeMax: 3.0, sizeMin: 3.8, sizeMax: 8.2, speedMin: 70, speedMax: 240, glowBase: 17, glowRange: 20 }), 340);
-      setTimeout(() => spawnFireworkBurst(state.w * 0.30, state.h * 0.16, 66, '#fff9eb', { motifs: ['petal', 'kirikane'], lifeMin: 1.6, lifeMax: 2.5, sizeMin: 3.0, sizeMax: 6.8, glowBase: 16, glowRange: 18 }), 520);
-      setTimeout(() => spawnFireworkBurst(state.w * 0.70, state.h * 0.16, 66, '#f3d36b', { motifs: ['kirikane', 'spark', 'plum'], lifeMin: 1.6, lifeMax: 2.5, sizeMin: 2.4, sizeMax: 6.0, glowBase: 18, glowRange: 18 }), 660);
-      setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.10, 112, '#ffffff', { motifs: ['petal', 'petal', 'kirikane', 'plum'], lifeMin: 2.2, lifeMax: 3.2, sizeMin: 4.0, sizeMax: 8.8, speedMin: 72, speedMax: 248, glowBase: 18, glowRange: 22 }), 820);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.18, state.h * 0.20, 72, '#f3d36b', { motifs: ['kirikane', 'spark'], lifeMin: 1.5, lifeMax: 2.4, sizeMin: 1.7, sizeMax: 4.3, glowBase: 12, glowRange: 14 }), 100);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.82, state.h * 0.20, 72, '#ffffff', { motifs: ['kirikane', 'spark'], lifeMin: 1.7, lifeMax: 2.6, sizeMin: 2.2, sizeMax: 5.2, glowBase: 12, glowRange: 14 }), 220);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.14, 112, '#ffeeb1', { motifs: ['kirikane', 'spark'], lifeMin: 2.0, lifeMax: 3.0, sizeMin: 2.8, sizeMax: 6.1, speedMin: 70, speedMax: 240, glowBase: 12, glowRange: 14 }), 340);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.30, state.h * 0.16, 66, '#fff9eb', { motifs: ['kirikane', 'spark'], lifeMin: 1.6, lifeMax: 2.5, sizeMin: 2.2, sizeMax: 5.0, glowBase: 12, glowRange: 13 }), 520);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.70, state.h * 0.16, 66, '#f3d36b', { motifs: ['kirikane', 'spark'], lifeMin: 1.6, lifeMax: 2.5, sizeMin: 1.8, sizeMax: 4.4, glowBase: 12, glowRange: 13 }), 660);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.10, 128, '#ffffff', { motifs: ['kirikane', 'spark'], lifeMin: 2.2, lifeMax: 3.2, sizeMin: 3.0, sizeMax: 6.5, speedMin: 72, speedMax: 248, glowBase: 13, glowRange: 15 }), 820);
     }
     playTone('merge', nextLevel);
     updateHud();
@@ -1866,15 +1867,15 @@
       ctx.globalAlpha = alpha * twinkle;
 
       ctx.shadowColor = f.color;
-      ctx.shadowBlur = f.glow * alpha + 2;
+      ctx.shadowBlur = f.glow * alpha * 0.72 + 1.5;
 
-      const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, f.size * (f.motif === 'petal' ? 4.4 : 3.6));
+      const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, f.size * (f.motif === 'petal' ? 3.2 : 2.7));
       glow.addColorStop(0, f.color);
       glow.addColorStop(.24, f.color + 'cc');
       glow.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(0, 0, f.size * (f.motif === 'petal' ? 2.7 : 2.4), 0, Math.PI * 2);
+      ctx.arc(0, 0, f.size * (f.motif === 'petal' ? 2.0 : 1.8), 0, Math.PI * 2);
       ctx.fill();
 
       if (f.motif === 'petal') {
@@ -1898,7 +1899,7 @@
         ctx.moveTo(0, -size * 0.72);
         ctx.quadraticCurveTo(size * 0.08, -size * 0.06, 0, size * 0.64);
         ctx.stroke();
-      } else if (f.motif === 'plum') {
+      } else if (f.motif === 'kirikane') {
         const size = f.size;
         ctx.fillStyle = f.color;
         for (let i = 0; i < 5; i++) {
@@ -1977,20 +1978,6 @@
       ctx.moveTo(0, -size * 0.7);
       ctx.quadraticCurveTo(size * 0.08, -size * 0.05, 0, size * 0.62);
       ctx.stroke();
-    } else if (p.motif === 'plum') {
-      ctx.fillStyle = p.color;
-      for (let i = 0; i < 5; i++) {
-        const a = (Math.PI * 2 * i) / 5;
-        const px = Math.cos(a) * size * 0.64;
-        const py = Math.sin(a) * size * 0.64;
-        ctx.beginPath();
-        ctx.arc(px, py, size * 0.52, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.fillStyle = '#f3d36b';
-      ctx.beginPath();
-      ctx.arc(0, 0, size * 0.3, 0, Math.PI * 2);
-      ctx.fill();
     } else {
       ctx.scale(0.92, stretch * 0.92);
       ctx.fillStyle = p.color;
