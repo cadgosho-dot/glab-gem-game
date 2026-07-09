@@ -1,4 +1,4 @@
-// g-Lab Gem Game v107 — final fireworks reduced in visual size
+// g-Lab Gem Game v111 — final ring allows gem overlap like other stones
 (() => {
   'use strict';
 
@@ -45,7 +45,7 @@
     { name:'オパール', short:'Pt', color:'#ed5bb0', dark:'#60123b', shine:'#ffe1f2', accent:'#ff91ca', value:55, radius:112, density:.46, cut:'tourmaline', sides:10, transparency:.68 },
     { name:'トパーズ', short:'To', color:'#f2c24b', dark:'#8c5710', shine:'#fff5bd', accent:'#ffd86a', value:66, radius:128, density:.40, cut:'emerald', sides:8, transparency:.66 },
     { name:'トルコ石', short:'Tu', color:'#35c5c5', dark:'#11606b', shine:'#bffffa', accent:'#74fff0', value:78, radius:145, density:.35, cut:'turquoise', sides:18, transparency:.45 },
-    { name:'ダイヤモンドの指輪', short:'Ring', color:'#f7d77a', dark:'#7a4a12', shine:'#fff3bc', accent:'#ffffff', value:100, radius:164, density:.30, cut:'ring', sides:18, transparency:.80 }
+    { name:'ダイヤモンドの指輪', short:'Ring', color:'#f7d77a', dark:'#7a4a12', shine:'#fff3bc', accent:'#ffffff', value:100, radius:145, density:.30, cut:'ring', sides:18, transparency:.80 }
   ];
 
   const gemImagePaths = [
@@ -241,8 +241,7 @@
     // Emerald (5th) and later keep the additional 5% reduction.
     const lateGemScale = level >= 4 ? 0.95 : 1;
     const difficultyScale = currentDifficultyOption().sizeScale || 1;
-    const finalRingOverlapScale = level === gems.length - 1 ? 0.88 : 1;
-    return Math.round(gems[level].radius * scale * easyScale * diamondAndLaterScale * lateGemScale * difficultyScale * finalRingOverlapScale);
+    return Math.round(gems[level].radius * scale * easyScale * diamondAndLaterScale * lateGemScale * difficultyScale);
   }
 
   function clampDropX(x) {
@@ -276,7 +275,8 @@
 
   function newBall(level, x, y, opts = {}) {
     const g = gems[level];
-    const r = gemRadius(level);
+    const baseR = gemRadius(level);
+    const r = level === gems.length - 1 ? Math.round(baseR * 0.62) : baseR;
     return {
       id: ++state.idCounter,
       kind: 'gem',
@@ -284,6 +284,7 @@
       x,
       y,
       r,
+      drawR: baseR,
       density: g.density || 1,
       mass: massForRadius(r, g.density || 1),
       vx: opts.vx || 0,
@@ -649,11 +650,9 @@
 
   function launchCelebrationFireworks() {
     const burstPlan = [
-      [state.w * 0.22, state.h * 0.22, 72, '#f3d36b', { motifs: ['kirikane', 'spark'], lifeMin: 1.5, lifeMax: 2.4, sizeMin: 1.7, sizeMax: 4.2, glowBase: 12, glowRange: 14 }],
-      [state.w * 0.50, state.h * 0.16, 98, '#ffffff', { motifs: ['kirikane', 'spark'], lifeMin: 2.0, lifeMax: 3.0, sizeMin: 2.8, sizeMax: 6.1, speedMin: 72, speedMax: 245, glowBase: 11, glowRange: 14 }],
-      [state.w * 0.78, state.h * 0.23, 72, '#f7dfa0', { motifs: ['kirikane', 'spark'], lifeMin: 1.5, lifeMax: 2.4, sizeMin: 1.7, sizeMax: 4.2, glowBase: 12, glowRange: 14 }],
-      [state.w * 0.36, state.h * 0.30, 60, '#fff9eb', { motifs: ['kirikane', 'spark'], lifeMin: 1.6, lifeMax: 2.6, sizeMin: 2.2, sizeMax: 5.0, glowBase: 11, glowRange: 13 }],
-      [state.w * 0.66, state.h * 0.31, 60, '#ffeeb1', { motifs: ['kirikane', 'spark'], lifeMin: 1.6, lifeMax: 2.6, sizeMin: 2.2, sizeMax: 5.0, glowBase: 11, glowRange: 13 }]
+      [state.w * 0.24, state.h * 0.22, 32, '#f3d36b', { motifs: ['kirikane', 'spark'], lifeMin: 1.2, lifeMax: 1.8, sizeMin: 1.5, sizeMax: 3.6, glowBase: 9, glowRange: 10 }],
+      [state.w * 0.50, state.h * 0.16, 46, '#ffffff', { motifs: ['kirikane', 'spark'], lifeMin: 1.35, lifeMax: 2.05, sizeMin: 2.2, sizeMax: 4.8, speedMin: 60, speedMax: 205, glowBase: 9, glowRange: 10 }],
+      [state.w * 0.76, state.h * 0.23, 32, '#ffeeb1', { motifs: ['kirikane', 'spark'], lifeMin: 1.2, lifeMax: 1.8, sizeMin: 1.5, sizeMax: 3.6, glowBase: 9, glowRange: 10 }]
     ];
     for (const [x, y, count, color, options] of burstPlan) {
       spawnFireworkBurst(x, y, count, color, options);
@@ -811,12 +810,8 @@
     spawnParticles(nx, ny, gems[nextLevel].accent, 12 + Math.min(nextLevel * 2, 24), 'japanese');
     if (nextLevel === gems.length - 1) {
       launchCelebrationFireworks();
-      setTimeout(() => spawnFireworkBurst(state.w * 0.18, state.h * 0.20, 72, '#f3d36b', { motifs: ['kirikane', 'spark'], lifeMin: 1.5, lifeMax: 2.4, sizeMin: 1.7, sizeMax: 4.3, glowBase: 12, glowRange: 14 }), 100);
-      setTimeout(() => spawnFireworkBurst(state.w * 0.82, state.h * 0.20, 72, '#ffffff', { motifs: ['kirikane', 'spark'], lifeMin: 1.7, lifeMax: 2.6, sizeMin: 2.2, sizeMax: 5.2, glowBase: 12, glowRange: 14 }), 220);
-      setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.14, 112, '#ffeeb1', { motifs: ['kirikane', 'spark'], lifeMin: 2.0, lifeMax: 3.0, sizeMin: 2.8, sizeMax: 6.1, speedMin: 70, speedMax: 240, glowBase: 12, glowRange: 14 }), 340);
-      setTimeout(() => spawnFireworkBurst(state.w * 0.30, state.h * 0.16, 66, '#fff9eb', { motifs: ['kirikane', 'spark'], lifeMin: 1.6, lifeMax: 2.5, sizeMin: 2.2, sizeMax: 5.0, glowBase: 12, glowRange: 13 }), 520);
-      setTimeout(() => spawnFireworkBurst(state.w * 0.70, state.h * 0.16, 66, '#f3d36b', { motifs: ['kirikane', 'spark'], lifeMin: 1.6, lifeMax: 2.5, sizeMin: 1.8, sizeMax: 4.4, glowBase: 12, glowRange: 13 }), 660);
-      setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.10, 128, '#ffffff', { motifs: ['kirikane', 'spark'], lifeMin: 2.2, lifeMax: 3.2, sizeMin: 3.0, sizeMax: 6.5, speedMin: 72, speedMax: 248, glowBase: 13, glowRange: 15 }), 820);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.14, 42, '#ffeeb1', { motifs: ['kirikane', 'spark'], lifeMin: 1.35, lifeMax: 2.0, sizeMin: 2.0, sizeMax: 4.6, speedMin: 58, speedMax: 195, glowBase: 9, glowRange: 10 }), 180);
+      setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.20, 28, '#ffffff', { motifs: ['kirikane', 'spark'], lifeMin: 1.1, lifeMax: 1.75, sizeMin: 1.7, sizeMax: 3.8, speedMin: 50, speedMax: 160, glowBase: 8, glowRange: 9 }), 360);
     }
     playTone('merge', nextLevel);
     updateHud();
@@ -1018,22 +1013,12 @@
     if (!image || !image.complete || !image.naturalWidth) return null;
 
     const aspect = image.naturalWidth / image.naturalHeight;
-    let drawW;
-    let drawH;
-    if (g.cut === 'ring') {
-      drawW = b.r * 2.35;
+    const renderR = b.drawR || b.r;
+    let drawH = renderR * 2.10;
+    let drawW = drawH * aspect;
+    if (drawW > renderR * 2.25) {
+      drawW = renderR * 2.25;
       drawH = drawW / aspect;
-      if (drawH > b.r * 1.42) {
-        drawH = b.r * 1.42;
-        drawW = drawH * aspect;
-      }
-    } else {
-      drawH = b.r * 2.10;
-      drawW = drawH * aspect;
-      if (drawW > b.r * 2.25) {
-        drawW = b.r * 2.25;
-        drawH = drawW / aspect;
-      }
     }
     return {
       image,
@@ -1210,6 +1195,7 @@
   function drawGem(b) {
     const g = gems[b.level];
     const img = gemImages[b.level];
+    const renderR = b.drawR || b.r;
 
     ctx.save();
     ctx.translate(b.x, b.y);
@@ -1221,20 +1207,11 @@
     if (img && img.complete && img.naturalWidth) {
       const aspect = img.naturalWidth / img.naturalHeight;
       let drawW, drawH;
-      if (g.cut === 'ring') {
-        drawW = b.r * 2.35;
+      drawH = renderR * 2.10;
+      drawW = drawH * aspect;
+      if (drawW > renderR * 2.25) {
+        drawW = renderR * 2.25;
         drawH = drawW / aspect;
-        if (drawH > b.r * 1.42) {
-          drawH = b.r * 1.42;
-          drawW = drawH * aspect;
-        }
-      } else {
-        drawH = b.r * 2.10;
-        drawW = drawH * aspect;
-        if (drawW > b.r * 2.25) {
-          drawW = b.r * 2.25;
-          drawH = drawW / aspect;
-        }
       }
 
       ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
@@ -1242,7 +1219,7 @@
       // Fallback until image is loaded
       ctx.fillStyle = g.color;
       ctx.beginPath();
-      ctx.arc(0, 0, b.r, 0, Math.PI * 2);
+      ctx.arc(0, 0, renderR, 0, Math.PI * 2);
       ctx.fill();
     }
 
