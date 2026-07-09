@@ -1,4 +1,4 @@
-// g-Lab Gem Game v111 — final ring allows gem overlap like other stones
+// g-Lab Gem Game v112 — final ring visual size increased by 1.3x
 (() => {
   'use strict';
 
@@ -276,7 +276,9 @@
   function newBall(level, x, y, opts = {}) {
     const g = gems[level];
     const baseR = gemRadius(level);
-    const r = level === gems.length - 1 ? Math.round(baseR * 0.62) : baseR;
+    const isFinalRing = level === gems.length - 1;
+    const drawR = isFinalRing ? Math.round(baseR * 1.3) : baseR;
+    const r = isFinalRing ? Math.round(drawR * 0.62) : baseR;
     return {
       id: ++state.idCounter,
       kind: 'gem',
@@ -284,7 +286,7 @@
       x,
       y,
       r,
-      drawR: baseR,
+      drawR,
       density: g.density || 1,
       mass: massForRadius(r, g.density || 1),
       vx: opts.vx || 0,

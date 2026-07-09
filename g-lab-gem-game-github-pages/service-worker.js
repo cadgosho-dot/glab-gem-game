@@ -1,7 +1,7 @@
-// g-Lab Gem Game v111 — final ring allows gem overlap like other stones
-const CACHE_NAME = 'g-lab-gem-game-v111-final-ring-overlap';
+// g-Lab Gem Game v112 — final ring visual size increased by 1.3x
+const CACHE_NAME = 'g-lab-gem-game-v112-final-ring-1-3x';
 const ASSETS = [
-  './', './index.html', './style.css', './app.js?v=111', './manifest.webmanifest?v=111',
+  './', './index.html', './style.css', './app.js?v=112', './manifest.webmanifest?v=112',
   './assets/outer-bg-art-nouveau.png', './assets/board-bg-v89.png?v=89', './assets/g-lab-logo.jpg',
   './assets/gem-assets/00-garnet.png', './assets/gem-assets/01-amethyst.png',
   './assets/gem-assets/02-aquamarine.png', './assets/gem-assets/03-diamond.png',
