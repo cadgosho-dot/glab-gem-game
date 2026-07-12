@@ -1,4 +1,4 @@
-// g-Lab Gem Game v112 — final ring visual size increased by 1.3x
+// g-Lab Gem Game v114 — fixed logical board size for consistent difficulty across phones
 (() => {
   'use strict';
 
@@ -92,13 +92,24 @@
   // Hard-mode flowers are permanent obstacles only.
   const COMBO_WINDOW_MS = 1500;
 
+  // The game always runs on this fixed internal board.
+  // Phone size changes only the display scale, not physics or available play space.
+  const LOGICAL_BOARD_WIDTH = 390;
+  const LOGICAL_BOARD_HEIGHT = 560;
+
   const state = {
-    w: 0,
-    h: 0,
+    w: LOGICAL_BOARD_WIDTH,
+    h: LOGICAL_BOARD_HEIGHT,
     dpr: 1,
+    cssW: 0,
+    cssH: 0,
+    viewScale: 1,
+    viewX: 0,
+    viewY: 0,
     balls: [],
     particles: [],
     fireworks: [],
+    effectTimeouts: [],
     score: 0,
     comboCount: 0,
     comboLastAt: 0,
@@ -131,6 +142,9 @@
     // Easy mode: stones may overlap slightly more, creating extra packing room.
     overlapFactor: 0.84
   };
+
+  const FINAL_RING_VISUAL_SCALE = 1.30;
+  const FINAL_RING_HITBOX_SCALE = 0.62;
 
   gemImages.forEach(image => {
     image.onload = () => {
@@ -195,6 +209,16 @@
     return Math.max(0.18, density * Math.pow(radius / 22, 1.10));
   }
 
+  function rememberEffectTimeout(timeoutId) {
+    state.effectTimeouts.push(timeoutId);
+    return timeoutId;
+  }
+
+  function clearEffectTimeouts() {
+    for (const timeoutId of state.effectTimeouts) clearTimeout(timeoutId);
+    state.effectTimeouts = [];
+  }
+
   function updateDifficultyButtons() {
     difficultyButtons.forEach(button => {
       const active = button.dataset.difficulty === state.difficulty;
@@ -215,18 +239,30 @@
 
   function resize() {
     const rect = canvas.parentElement.getBoundingClientRect();
-    state.w = Math.max(300, Math.floor(rect.width));
-    state.h = Math.max(430, Math.floor(rect.height));
+    state.cssW = Math.max(1, rect.width);
+    state.cssH = Math.max(1, rect.height);
+    state.w = LOGICAL_BOARD_WIDTH;
+    state.h = LOGICAL_BOARD_HEIGHT;
     state.dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.floor(state.w * state.dpr);
-    canvas.height = Math.floor(state.h * state.dpr);
-    ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
-    // The dashed DANGER LINE now sits directly under the board ceiling.
-    // Touching it is the game-over condition.
+
+    canvas.width = Math.max(1, Math.floor(state.cssW * state.dpr));
+    canvas.height = Math.max(1, Math.floor(state.cssH * state.dpr));
+
+    // Uniform scaling preserves the board aspect ratio. Extra space becomes a
+    // decorative margin instead of additional gameplay space.
+    state.viewScale = Math.min(state.cssW / state.w, state.cssH / state.h);
+    state.viewX = (state.cssW - state.w * state.viewScale) / 2;
+    state.viewY = (state.cssH - state.h * state.viewScale) / 2;
+
+    // The danger line, spawn point and physics coordinates are now identical
+    // on every phone because they are based on the fixed logical board.
     state.dangerLine = 20;
     state.spawnY = Math.max(48, Math.round(state.dangerLine * 0.48));
-    state.dropX = state.dropX || state.w / 2;
+    if (!Number.isFinite(state.dropX) || state.dropX <= 0) state.dropX = state.w / 2;
+    state.dropX = clampDropX(state.dropX);
+
     updateGuide();
+    tapHint.style.top = `${state.viewY + 12}px`;
     renderGemIcon(currentGemIcon, state.current);
     renderGemIcon(nextGemIcon, state.next);
   }
@@ -251,7 +287,9 @@
 
   function updateGuide() {
     const x = clampDropX(state.dropX || state.w / 2);
-    dropGuide.style.left = `${x}px`;
+    dropGuide.style.left = `${state.viewX + x * state.viewScale}px`;
+    dropGuide.style.top = `${state.viewY}px`;
+    dropGuide.style.height = `${state.h * state.viewScale}px`;
   }
 
   function updateHud() {
@@ -277,8 +315,8 @@
     const g = gems[level];
     const baseR = gemRadius(level);
     const isFinalRing = level === gems.length - 1;
-    const drawR = isFinalRing ? Math.round(baseR * 1.3) : baseR;
-    const r = isFinalRing ? Math.round(drawR * 0.62) : baseR;
+    const drawR = opts.drawR || (isFinalRing ? Math.round(baseR * FINAL_RING_VISUAL_SCALE) : baseR);
+    const r = opts.hitR || (isFinalRing ? Math.round(drawR * FINAL_RING_HITBOX_SCALE) : baseR);
     return {
       id: ++state.idCounter,
       kind: 'gem',
@@ -691,8 +729,7 @@
         twinkle: Math.random() * Math.PI * 2,
         motif,
         rot: Math.random() * Math.PI * 2,
-        spin: (Math.random() - 0.5) * (motif === 'petal' ? 4.4 : 2.8),
-        stretch: motif === 'petal' ? 1.16 + Math.random() * 0.98 : 1,
+        spin: (Math.random() - 0.5) * (motif === 'kirikane' ? 2.4 : 3.0),
         shower: false
       });
     }
@@ -700,13 +737,11 @@
 
   function stepFireworks(dt) {
     for (const f of state.fireworks) {
-      const isPetal = f.motif === 'petal';
-      if (isPetal) f.vx += Math.sin((f.twinkle || 0) + (f.maxLife - f.life) * 3.4) * 9 * dt;
-      f.vy += (isPetal ? 46 : 28) * dt;
+      f.vy += 28 * dt;
       f.x += f.vx * dt;
       f.y += f.vy * dt;
-      f.vx *= isPetal ? 0.994 : 0.992;
-      f.vy *= isPetal ? 0.994 : 0.992;
+      f.vx *= 0.992;
+      f.vy *= 0.992;
       f.rot = (f.rot || 0) + (f.spin || 0) * dt;
       f.life -= dt;
     }
@@ -735,7 +770,7 @@
     state.moves++;
     if (state.moves > 1) tapHint.classList.add('hide');
     playTone('drop', level);
-    setTimeout(() => { state.canDrop = !state.gameOver; }, 380);
+    rememberEffectTimeout(setTimeout(() => { state.canDrop = !state.gameOver; }, 380));
     updateHud();
     updateGuide();
   }
@@ -745,6 +780,7 @@
     state.soundEnabled = true;
     ensureAudio();
     syncBgm();
+    clearEffectTimeouts();
     state.balls = [];
     state.particles = [];
     state.fireworks = [];
@@ -800,7 +836,6 @@
     const nvx = (a.vx + b.vx) * 0.22;
     const nextLevel = a.level + 1;
     const nvy = (a.vy + b.vy) * 0.15 - Math.max(52, 118 - nextLevel * 5);
-    const mergedRadius = gemRadius(nextLevel);
     const combo = registerCombo(now);
     const baseScore = gems[nextLevel].value * 10;
     const comboScore = Math.round(baseScore * combo.multiplier);
@@ -812,8 +847,8 @@
     spawnParticles(nx, ny, gems[nextLevel].accent, 12 + Math.min(nextLevel * 2, 24), 'japanese');
     if (nextLevel === gems.length - 1) {
       launchCelebrationFireworks();
-      setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.14, 42, '#ffeeb1', { motifs: ['kirikane', 'spark'], lifeMin: 1.35, lifeMax: 2.0, sizeMin: 2.0, sizeMax: 4.6, speedMin: 58, speedMax: 195, glowBase: 9, glowRange: 10 }), 180);
-      setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.20, 28, '#ffffff', { motifs: ['kirikane', 'spark'], lifeMin: 1.1, lifeMax: 1.75, sizeMin: 1.7, sizeMax: 3.8, speedMin: 50, speedMax: 160, glowBase: 8, glowRange: 9 }), 360);
+      rememberEffectTimeout(setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.14, 42, '#ffeeb1', { motifs: ['kirikane', 'spark'], lifeMin: 1.35, lifeMax: 2.0, sizeMin: 2.0, sizeMax: 4.6, speedMin: 58, speedMax: 195, glowBase: 9, glowRange: 10 }), 180));
+      rememberEffectTimeout(setTimeout(() => spawnFireworkBurst(state.w * 0.50, state.h * 0.20, 28, '#ffffff', { motifs: ['kirikane', 'spark'], lifeMin: 1.1, lifeMax: 1.75, sizeMin: 1.7, sizeMax: 3.8, speedMin: 50, speedMax: 160, glowBase: 8, glowRange: 9 }), 360));
     }
     playTone('merge', nextLevel);
     updateHud();
@@ -1848,52 +1883,16 @@
       ctx.shadowColor = f.color;
       ctx.shadowBlur = f.glow * alpha * 0.72 + 1.5;
 
-      const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, f.size * (f.motif === 'petal' ? 3.2 : 2.7));
+      const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, f.size * 2.7);
       glow.addColorStop(0, f.color);
       glow.addColorStop(.24, f.color + 'cc');
       glow.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(0, 0, f.size * (f.motif === 'petal' ? 2.0 : 1.8), 0, Math.PI * 2);
+      ctx.arc(0, 0, f.size * 1.8, 0, Math.PI * 2);
       ctx.fill();
 
-      if (f.motif === 'petal') {
-        const size = f.size;
-        const stretch = f.stretch || 1.4;
-        ctx.scale(0.94, stretch);
-        ctx.fillStyle = f.color;
-        ctx.beginPath();
-        ctx.moveTo(0, -size * 1.28);
-        ctx.bezierCurveTo(size * 0.96, -size * 1.08, size * 1.06, size * 0.08, 0, size * 1.06);
-        ctx.bezierCurveTo(-size * 1.06, size * 0.08, -size * 0.96, -size * 1.08, 0, -size * 1.28);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,.84)';
-        ctx.beginPath();
-        ctx.ellipse(0, -size * 0.24, size * 0.22, size * 0.52, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(212,181,87,.34)';
-        ctx.lineWidth = Math.max(0.6, size * 0.08);
-        ctx.beginPath();
-        ctx.moveTo(0, -size * 0.72);
-        ctx.quadraticCurveTo(size * 0.08, -size * 0.06, 0, size * 0.64);
-        ctx.stroke();
-      } else if (f.motif === 'kirikane') {
-        const size = f.size;
-        ctx.fillStyle = f.color;
-        for (let i = 0; i < 5; i++) {
-          const a = (Math.PI * 2 * i) / 5;
-          const px = Math.cos(a) * size * 0.72;
-          const py = Math.sin(a) * size * 0.72;
-          ctx.beginPath();
-          ctx.arc(px, py, size * 0.56, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.fillStyle = '#f3d36b';
-        ctx.beginPath();
-        ctx.arc(0, 0, size * 0.34, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (f.motif === 'kirikane') {
+      if (f.motif === 'kirikane') {
         const size = f.size;
         ctx.fillStyle = f.color;
         ctx.beginPath();
@@ -1903,6 +1902,7 @@
         ctx.lineTo(-size * 0.52, 0);
         ctx.closePath();
         ctx.fill();
+
         ctx.strokeStyle = 'rgba(255,255,255,.84)';
         ctx.lineCap = 'round';
         ctx.lineWidth = Math.max(0.8, size * 0.13);
@@ -2008,12 +2008,34 @@
   }
 
   function render() {
+    // Clear the full physical canvas first, then draw the fixed logical board
+    // with one uniform scale. This prevents stretching and keeps images crisp.
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const scale = state.dpr * state.viewScale;
+    ctx.setTransform(
+      scale,
+      0,
+      0,
+      scale,
+      state.dpr * state.viewX,
+      state.dpr * state.viewY
+    );
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, state.w, state.h);
+    ctx.clip();
+
     drawBackground();
     drawFireworks();
     const sorted = [...state.balls].sort((a,b)=>a.r-b.r);
     for (const b of sorted) drawBall(b);
     drawParticles();
     drawPreview();
+
+    ctx.restore();
   }
 
   function loop(now) {
@@ -2026,7 +2048,8 @@
 
   function pointerX(clientX) {
     const rect = canvas.getBoundingClientRect();
-    return (clientX - rect.left) * (state.w / rect.width);
+    const localCssX = clientX - rect.left;
+    return (localCssX - state.viewX) / Math.max(0.0001, state.viewScale);
   }
 
   function setPointer(clientX) {

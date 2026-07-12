@@ -1,7 +1,7 @@
-// g-Lab Gem Game v112 — final ring visual size increased by 1.3x
-const CACHE_NAME = 'g-lab-gem-game-v112-final-ring-1-3x';
+// g-Lab Gem Game v114 — fixed logical board size for consistent difficulty across phones
+const CACHE_NAME = 'g-lab-gem-game-v114-fixed-logical-board';
 const ASSETS = [
-  './', './index.html', './style.css', './app.js?v=112', './manifest.webmanifest?v=112',
+  './', './index.html', './style.css', './app.js?v=114', './manifest.webmanifest?v=114',
   './assets/outer-bg-art-nouveau.png', './assets/board-bg-v89.png?v=89', './assets/g-lab-logo.jpg',
   './assets/gem-assets/00-garnet.png', './assets/gem-assets/01-amethyst.png',
   './assets/gem-assets/02-aquamarine.png', './assets/gem-assets/03-diamond.png',
