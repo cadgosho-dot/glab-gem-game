@@ -1,4 +1,4 @@
-// g-Lab Gem Game v114 — fixed logical board size for consistent difficulty across phones
+// g-Lab Gem Game v115 — restored to the v113 responsive board layout
 (() => {
   'use strict';
 
@@ -92,20 +92,10 @@
   // Hard-mode flowers are permanent obstacles only.
   const COMBO_WINDOW_MS = 1500;
 
-  // The game always runs on this fixed internal board.
-  // Phone size changes only the display scale, not physics or available play space.
-  const LOGICAL_BOARD_WIDTH = 390;
-  const LOGICAL_BOARD_HEIGHT = 560;
-
   const state = {
-    w: LOGICAL_BOARD_WIDTH,
-    h: LOGICAL_BOARD_HEIGHT,
+    w: 0,
+    h: 0,
     dpr: 1,
-    cssW: 0,
-    cssH: 0,
-    viewScale: 1,
-    viewX: 0,
-    viewY: 0,
     balls: [],
     particles: [],
     fireworks: [],
@@ -239,30 +229,18 @@
 
   function resize() {
     const rect = canvas.parentElement.getBoundingClientRect();
-    state.cssW = Math.max(1, rect.width);
-    state.cssH = Math.max(1, rect.height);
-    state.w = LOGICAL_BOARD_WIDTH;
-    state.h = LOGICAL_BOARD_HEIGHT;
+    state.w = Math.max(300, Math.floor(rect.width));
+    state.h = Math.max(430, Math.floor(rect.height));
     state.dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-    canvas.width = Math.max(1, Math.floor(state.cssW * state.dpr));
-    canvas.height = Math.max(1, Math.floor(state.cssH * state.dpr));
-
-    // Uniform scaling preserves the board aspect ratio. Extra space becomes a
-    // decorative margin instead of additional gameplay space.
-    state.viewScale = Math.min(state.cssW / state.w, state.cssH / state.h);
-    state.viewX = (state.cssW - state.w * state.viewScale) / 2;
-    state.viewY = (state.cssH - state.h * state.viewScale) / 2;
-
-    // The danger line, spawn point and physics coordinates are now identical
-    // on every phone because they are based on the fixed logical board.
+    canvas.width = Math.floor(state.w * state.dpr);
+    canvas.height = Math.floor(state.h * state.dpr);
+    ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+    // The dashed DANGER LINE now sits directly under the board ceiling.
+    // Touching it is the game-over condition.
     state.dangerLine = 20;
     state.spawnY = Math.max(48, Math.round(state.dangerLine * 0.48));
-    if (!Number.isFinite(state.dropX) || state.dropX <= 0) state.dropX = state.w / 2;
-    state.dropX = clampDropX(state.dropX);
-
+    state.dropX = state.dropX || state.w / 2;
     updateGuide();
-    tapHint.style.top = `${state.viewY + 12}px`;
     renderGemIcon(currentGemIcon, state.current);
     renderGemIcon(nextGemIcon, state.next);
   }
@@ -287,9 +265,7 @@
 
   function updateGuide() {
     const x = clampDropX(state.dropX || state.w / 2);
-    dropGuide.style.left = `${state.viewX + x * state.viewScale}px`;
-    dropGuide.style.top = `${state.viewY}px`;
-    dropGuide.style.height = `${state.h * state.viewScale}px`;
+    dropGuide.style.left = `${x}px`;
   }
 
   function updateHud() {
@@ -2008,34 +1984,12 @@
   }
 
   function render() {
-    // Clear the full physical canvas first, then draw the fixed logical board
-    // with one uniform scale. This prevents stretching and keeps images crisp.
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const scale = state.dpr * state.viewScale;
-    ctx.setTransform(
-      scale,
-      0,
-      0,
-      scale,
-      state.dpr * state.viewX,
-      state.dpr * state.viewY
-    );
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, 0, state.w, state.h);
-    ctx.clip();
-
     drawBackground();
     drawFireworks();
     const sorted = [...state.balls].sort((a,b)=>a.r-b.r);
     for (const b of sorted) drawBall(b);
     drawParticles();
     drawPreview();
-
-    ctx.restore();
   }
 
   function loop(now) {
@@ -2048,8 +2002,7 @@
 
   function pointerX(clientX) {
     const rect = canvas.getBoundingClientRect();
-    const localCssX = clientX - rect.left;
-    return (localCssX - state.viewX) / Math.max(0.0001, state.viewScale);
+    return (clientX - rect.left) * (state.w / rect.width);
   }
 
   function setPointer(clientX) {
